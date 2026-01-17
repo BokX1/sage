@@ -97,4 +97,36 @@ describe('PollinationsClient', () => {
         // Should catch quickly, definitely not after 3 retries
         expect(global.fetch).toHaveBeenCalledTimes(1);
     });
+
+    it('should preemptively disable response_format and inject prompts when tools + json_object are requested', async () => {
+        const client = new PollinationsClient();
+
+        (global.fetch as any).mockResolvedValue({
+            ok: true,
+            json: async () => ({ choices: [{ message: { content: '{}' } }] })
+        });
+
+        await client.chat({
+            messages: [{ role: 'user', content: 'test' }],
+            responseFormat: 'json_object',
+            tools: [{ type: 'function', function: { name: 'google_search' } }] as any
+        });
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        const call = (global.fetch as any).mock.calls[0];
+        const body = JSON.parse(call[1].body);
+
+        // 1. response_format should be gone
+        expect(body).not.toHaveProperty('response_format');
+
+        // 2. tools should still be there
+        expect(body.tools).toHaveLength(1);
+        expect(body.tools[0].function.name).toBe('google_search');
+
+        // 3. system prompt should have injected instructions
+        const systemMsg = body.messages.find((m: any) => m.role === 'system');
+        expect(systemMsg).toBeDefined();
+        expect(systemMsg.content).toContain('IMPORTANT: You must output strictly valid JSON only');
+        expect(systemMsg.content).toContain('You have access to google_search tool');
+    });
 });

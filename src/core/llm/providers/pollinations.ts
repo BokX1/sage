@@ -60,6 +60,26 @@ export class PollinationsClient implements LLMClient {
             tool_choice: request.toolChoice,
         };
 
+        // WORKAROUND: Gemini/Vertex AI crashes if both tools and response_format='json_object' are sent.
+        // We detect this case, disable API-level JSON mode, and enforce it via system prompt instead.
+        if (payload.response_format?.type === 'json_object' && payload.tools && payload.tools.length > 0) {
+            logger.info({ model }, '[Pollinations] Detected Tools + JSON Mode. Disabling API JSON mode and injecting prompt instructions to prevent upstream crash.');
+
+            // 1. Disable API-level JSON mode
+            delete payload.response_format;
+
+            // 2. Inject instructions
+            const jsonInstruction = " IMPORTANT: You must output strictly valid JSON only. Do not wrap in markdown blocks. No other text.";
+            const toolInstruction = " You have access to google_search tool for real-time info/web. Never deny using it.";
+
+            const systemMsg = payload.messages.find((m: any) => m.role === 'system');
+            if (systemMsg) {
+                systemMsg.content += toolInstruction + jsonInstruction;
+            } else {
+                payload.messages.unshift({ role: 'system', content: toolInstruction + jsonInstruction });
+            }
+        }
+
         // Safe URL logging (no headers)
         logger.debug({ url, model, messageCount: request.messages.length }, '[Pollinations] Request');
         metrics.increment('llm_calls_total', { model, provider: 'pollinations' });
