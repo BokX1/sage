@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+/* eslint-disable no-console */
 import { runConfigDoctor } from '../core/config/doctor';
 
 console.log('🎓 Sage v0.1 Alpha - Final Certification Gate (Phase A-F)\n');

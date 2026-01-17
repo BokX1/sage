@@ -1,23 +1,23 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import { config as newConfig } from '../../config';
 
+// Backwards compatibility layer
 export const config = {
-    discordToken: process.env.DISCORD_TOKEN || '',
-    discordAppId: process.env.DISCORD_APP_ID || '',
-    logLevel: process.env.LOG_LEVEL || 'info',
-    rateLimitMax: process.env.RATE_LIMIT_MAX,
-    rateLimitWindowSec: process.env.RATE_LIMIT_WINDOW_SEC,
-    seriousMode: process.env.SERIOUS_MODE,
-    autopilotLevel: process.env.AUTOPILOT_LEVEL,
-    silenceGraceSec: process.env.SILENCE_GRACE_SEC,
-    // LLM Config - Pollinations is the default provider
-    llmProvider: process.env.LLM_PROVIDER || 'pollinations',
-    pollinationsBaseUrl: process.env.POLLINATIONS_BASE_URL || 'https://gen.pollinations.ai/v1',
-    pollinationsApiKey: process.env.POLLINATIONS_API_KEY, // Optional - only if required by endpoint
-    pollinationsModel: process.env.POLLINATIONS_MODEL || 'gemini',
+    discordToken: newConfig.DISCORD_TOKEN,
+    discordAppId: newConfig.DISCORD_APP_ID,
+    logLevel: newConfig.LOG_LEVEL,
+    rateLimitMax: newConfig.RATE_LIMIT_MAX.toString(), // casting to string to match old type if needed, or number
+    rateLimitWindowSec: newConfig.RATE_LIMIT_WINDOW_SEC.toString(),
+    seriousMode: newConfig.SERIOUS_MODE.toString(),
+    autopilotLevel: newConfig.AUTOPILOT_LEVEL,
+    silenceGraceSec: newConfig.SILENCE_GRACE_SEC.toString(),
 
-    // Gemini Config
-    geminiApiKey: process.env.GEMINI_API_KEY,
-    geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash-exp',
-    geminiBaseUrl: process.env.GEMINI_BASE_URL,
+    // LLM
+    llmProvider: newConfig.LLM_PROVIDER,
+    pollinationsBaseUrl: newConfig.POLLINATIONS_BASE_URL,
+    pollinationsApiKey: newConfig.POLLINATIONS_API_KEY,
+    pollinationsModel: newConfig.POLLINATIONS_MODEL,
+
+    geminiApiKey: newConfig.GEMINI_API_KEY,
+    geminiModel: newConfig.GEMINI_MODEL,
+    geminiBaseUrl: newConfig.GEMINI_BASE_URL,
 };

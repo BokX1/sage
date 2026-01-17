@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 
 import { runConfigDoctor } from '../core/config/doctor';
 import { PrismaClient } from '@prisma/client';

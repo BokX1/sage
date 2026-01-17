@@ -1,4 +1,4 @@
-# Sage v0.1 Alpha
+# Sage v0.2 (Chat Only)
 
 A Discord duo-companion bot powered by Pollinations AI.
 
@@ -6,19 +6,19 @@ A Discord duo-companion bot powered by Pollinations AI.
 
 - Node.js (LTS)
 - npm (or pnpm if available)
-- Docker (for Postgres, optional - can use SQLite for local dev)
+- Docker (for Postgres)
 
 ## Quick Start
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/BokX1/sage.git
-cd sage
-npm install
+git clone https://github.com/BokX1/Sage.git
+cd Sage
+npm ci
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env with your actual values (see Configuration below)
+# Edit .env with your actual values (Strictly validated on startup!)
 
 # 3. Setup database
 docker-compose up -d          # Start Postgres
@@ -152,14 +152,21 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_APP_ID&permissions=27702
 
 ---
 
-## Testing
+## Testing & Quality
+
+Sage adheres to strict coding standards:
 
 ```bash
-npm test              # Run all tests
-npm run lint          # Run linter
-npm run build         # Build TypeScript
+npm test              # Run unit tests
+npm run lint          # Run ESLint (Flat Config)
+npm run build         # Build TypeScript (Strict Mode)
 npm run cert          # Full certification suite
 ```
+
+**CI/CD**:
+
+- GitHub Actions automatically test and build on push.
+- Husky prevents committing code that fails lint/tests.
 
 ---
 

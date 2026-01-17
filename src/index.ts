@@ -1,12 +1,12 @@
 import { client } from './bot/client';
-import { config } from './core/config/env';
+import { config } from './config';
 import { logger } from './utils/logger';
 import { registerCommands } from './bot/commands';
 import { registerMessageCreateHandler } from './bot/handlers/messageCreate';
 import { registerInteractionCreateHandler } from './bot/handlers/interactionCreate';
 
 async function main() {
-    if (!config.discordToken) {
+    if (!config.DISCORD_TOKEN) {
         logger.error('DISCORD_TOKEN is missing');
         process.exit(1);
     }
@@ -20,7 +20,7 @@ async function main() {
         await registerCommands();
     });
 
-    await client.login(config.discordToken);
+    await client.login(config.DISCORD_TOKEN);
 }
 
 main().catch((err) => {
