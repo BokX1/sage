@@ -6,6 +6,7 @@ export type ContextBlockId =
     | 'profile_summary'
     | 'rolling_summary'
     | 'transcript'
+    | 'intent_hint'
     | 'reply_context'
     | 'user'
     | 'trunc_notice';
@@ -104,6 +105,9 @@ function truncateBlockContent(
             if (truncatedContent.length === block.content.length) {
                 return { ...block, content: truncatedContent };
             }
+            if (noticeTokens >= maxTokens) {
+                return { ...block, content: safeTruncateEnd(block.content, maxTokens, estimator) };
+            }
             return { ...block, content: `${notice}${truncatedContent}`.trimEnd() };
         }
         case 'memory':
@@ -172,6 +176,7 @@ const TRUNCATION_ORDER: ContextBlockId[] = [
     'transcript',
     'rolling_summary',
     'profile_summary',
+    'intent_hint',
     'reply_context',
     'memory',
     'user',
@@ -253,7 +258,7 @@ export function budgetContextBlocks(
         }
 
         const minTokens = block.minTokens ?? 0;
-        let upperBound = estimator(block.content);
+        const upperBound = estimator(block.content);
 
         if (upperBound > minTokens) {
             let bestTokens = upperBound;

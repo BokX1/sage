@@ -37,8 +37,9 @@ export interface BuildContextMessagesParams {
  *   4. system (channel profile summary) if present
  *   5. system (channel rolling summary) if present
  *   6. system (recent transcript) if present
- *   7. assistant (replyToBotText) if present
- *   8. user (userText)
+ *   7. system (intent hint) if present
+ *   8. assistant (replyToBotText) if present
+ *   9. user (userText)
  */
 export function buildContextMessages(params: BuildContextMessagesParams): LLMChatMessage[] {
     const {
@@ -51,16 +52,11 @@ export function buildContextMessages(params: BuildContextMessagesParams): LLMCha
         intentHint,
     } = params;
 
-    const basePrompt = composeSystemPrompt();
-    const baseContent = intentHint
-        ? `${basePrompt}\n\nIntent hint: ${intentHint}`
-        : basePrompt;
-
     const blocks: ContextBlock[] = [
         {
             id: 'base_system',
             role: 'system',
-            content: baseContent,
+            content: composeSystemPrompt(),
             priority: 100,
             truncatable: false,
         },
@@ -106,6 +102,17 @@ export function buildContextMessages(params: BuildContextMessagesParams): LLMCha
             content: recentTranscript,
             priority: 50,
             hardMaxTokens: config.contextBlockMaxTokensTranscript,
+            truncatable: true,
+        });
+    }
+
+    if (intentHint) {
+        blocks.push({
+            id: 'intent_hint',
+            role: 'system',
+            content: `Intent hint: ${intentHint}`,
+            priority: 45,
+            hardMaxTokens: config.contextBlockMaxTokensReplyContext,
             truncatable: true,
         });
     }
