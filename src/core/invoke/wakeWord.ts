@@ -126,23 +126,23 @@ export function detectInvocation(params: DetectInvocationParams): Invocation | n
   const withoutMentions = stripMentions(rawContent);
   const cleanedBase = cleanupText(withoutMentions);
 
-  if (isMentioned) {
-    if (!cleanedBase) {
-      return null;
-    }
-    return {
-      kind: 'mention',
-      cleanedText: cleanedBase,
-      intent: detectIntent(cleanedBase),
-    };
-  }
-
   if (isReplyToBot) {
     if (!cleanedBase) {
       return null;
     }
     return {
       kind: 'reply',
+      cleanedText: cleanedBase,
+      intent: detectIntent(cleanedBase),
+    };
+  }
+
+  if (isMentioned) {
+    if (!cleanedBase) {
+      return null;
+    }
+    return {
+      kind: 'mention',
       cleanedText: cleanedBase,
       intent: detectIntent(cleanedBase),
     };

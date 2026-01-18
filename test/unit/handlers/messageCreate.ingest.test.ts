@@ -182,6 +182,29 @@ describe('messageCreate - Ingest Flow', () => {
         expect(mockGenerateChatReply).toHaveBeenCalledTimes(1);
     });
 
+    it('should treat replies as replies even when mentioning the bot', async () => {
+        const message = createMockMessage({
+            content: '<@bot-123> following up on your reply',
+            mentions: {
+                has: vi.fn((user: User) => user.id === 'bot-123'),
+            } as any,
+            reference: { messageId: 'ref-1' } as any,
+            fetchReference: vi.fn().mockResolvedValue({
+                author: { id: 'bot-123' },
+                content: 'Prior bot message',
+            }),
+        });
+
+        await handleMessageCreate(message);
+
+        expect(mockGenerateChatReply).toHaveBeenCalledTimes(1);
+        expect(mockGenerateChatReply).toHaveBeenCalledWith(
+            expect.objectContaining({
+                replyToBotText: 'Prior bot message',
+            }),
+        );
+    });
+
     it('should skip bot messages without ingesting', async () => {
         const message = createMockMessage({
             author: {
