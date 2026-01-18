@@ -15,12 +15,6 @@ vi.mock('../../src/utils/logger', () => ({
 }));
 
 // 2. Mock Prisma
-// We define mock logic in the factory to ensure it's available.
-// We can't access outer variables easily because of hoisting.
-// So we use local variables inside the factory and we'll access them via import in tests?
-// No, the best way for fully isolated mocks is to import the module and spy on it.
-// OR assume the module exports 'prisma' object which has methods we can mock.
-
 vi.mock('../../src/db/client', () => ({
     prisma: {
         userProfile: {
@@ -31,12 +25,30 @@ vi.mock('../../src/db/client', () => ({
 }));
 
 // 3. Mock LLM
-// We mock getLLMClient to return an object with a mocked chat function.
 const mockChatFn = vi.fn();
 vi.mock('../../src/core/llm', () => ({
     getLLMClient: () => ({
         chat: mockChatFn,
     }),
+}));
+
+// 4. Mock Config (Mutable)
+const mockConfig = vi.hoisted(() => ({
+    llmProvider: 'gemini',
+    geminiModel: 'gemini-pro',
+    openaiModel: 'gpt-4o'
+}));
+vi.mock('../../src/core/config/env', () => ({
+    config: mockConfig
+}));
+
+// 5. Mock Profile Updater
+const { mockUpdateProfile } = vi.hoisted(() => ({
+    mockUpdateProfile: vi.fn().mockResolvedValue('Mocked New Summary')
+}));
+
+vi.mock('../../src/core/memory/profileUpdater', () => ({
+    updateProfileSummary: mockUpdateProfile
 }));
 
 import { generateChatReply } from '../../src/core/chat/chatEngine';
@@ -46,88 +58,70 @@ describe('ChatEngine', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockChatFn.mockReset();
+        mockConfig.llmProvider = 'gemini';
     });
 
     it('should generate a reply using the LLM', async () => {
-        // Mock profile lookup (no profile)
         vi.mocked(prisma.userProfile.findUnique).mockResolvedValueOnce(null);
-        // Mock LLM chat response
         mockChatFn.mockResolvedValue({ content: 'Hello there!' });
 
         const result = await generateChatReply({
-            traceId: 'test-trace',
-            userId: 'user1',
-            channelId: 'chan1',
-            messageId: 'msg1',
-            userText: 'Hi',
+            traceId: 'test-trace', userId: 'user1', channelId: 'chan1', messageId: 'msg1', userText: 'Hi',
         });
 
         expect(result.replyText).toBe('Hello there!');
-        // Should have called LLM with system and user msg
-        expect(mockChatFn).toHaveBeenCalledTimes(2); // Once for reply, once for profile update
-        const chatCall = mockChatFn.mock.calls[0][0]; // First call
-        expect(chatCall.messages[1].content).toBe('Hi');
+        expect(mockChatFn).toHaveBeenCalledTimes(1);
     });
 
     it('should inject personal memory into system prompt', async () => {
-        // Mock profile with summary
         vi.mocked(prisma.userProfile.findUnique).mockResolvedValueOnce({
-            userId: 'user1',
-            summary: 'Likes cats',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            userId: 'user1', summary: 'Likes cats', createdAt: new Date(), updatedAt: new Date()
         });
         mockChatFn.mockResolvedValue({ content: 'Meow' });
 
         await generateChatReply({
-            traceId: 'test-trace',
-            userId: 'user1',
-            channelId: 'chan1',
-            messageId: 'msg1',
-            userText: 'Do I like pets?',
+            traceId: 'test', userId: 'u1', channelId: 'c1', messageId: 'm1', userText: 'Do I like pets?',
         });
 
         const chatCall = mockChatFn.mock.calls[0][0];
-        // Index 0 is main system prompt, Index 1 is memory (if present)
-        const memoryMsg = chatCall.messages[1].content;
-        expect(memoryMsg).toContain('Likes cats');
+        expect(chatCall.messages[1].content).toContain('Likes cats');
     });
 
     it('should trigger profile update in background', async () => {
-        // Mock profile
         vi.mocked(prisma.userProfile.findUnique).mockResolvedValueOnce({
-            userId: 'user1',
-            summary: 'Old summary',
-            createdAt: new Date(),
-            updatedAt: new Date()
+            userId: 'user1', summary: 'Old summary', createdAt: new Date(), updatedAt: new Date()
         });
-
-        // Mock LLM calls:
-        // 1. Reply generation
-        mockChatFn.mockResolvedValueOnce({ content: 'Sure, updated.' });
-        // 2. Profile update generation (MUST BE JSON)
-        mockChatFn.mockResolvedValueOnce({
-            content: JSON.stringify({ summary: 'New stable preference: likes dark mode' })
-        });
+        mockChatFn.mockResolvedValue({ content: 'Sure, updated.' });
 
         await generateChatReply({
-            traceId: 'test-trace',
-            userId: 'user1',
-            channelId: 'chan1',
-            messageId: 'msg1',
-            userText: 'I like dark mode now',
+            traceId: 'test', userId: 'user1', channelId: 'chan1', messageId: 'msg1', userText: 'I like dark mode',
         });
 
-        // Wait a tick for fire-and-forget promise
-        await new Promise(resolve => setTimeout(resolve, 10));
+        expect(mockUpdateProfile).toHaveBeenCalledWith({
+            previousSummary: 'Old summary',
+            userMessage: 'I like dark mode',
+            assistantReply: 'Sure, updated.'
+        });
 
-        // Check if updating LLM was called
-        expect(mockChatFn).toHaveBeenCalledTimes(2);
+        // Wait for background promise
+        await new Promise(resolve => setTimeout(resolve, 50));
 
-        expect(prisma.userProfile.upsert).toHaveBeenCalled();
         expect(prisma.userProfile.upsert).toHaveBeenCalledWith(expect.objectContaining({
             where: { userId: 'user1' },
-            update: { summary: 'New stable preference: likes dark mode' }
+            update: { summary: 'Mocked New Summary' }
         }));
+    });
+
+    it('should inject Google Search tool for Pollinations provider', async () => {
+        mockConfig.llmProvider = 'pollinations';
+        mockChatFn.mockResolvedValue({ content: 'Result' });
+
+        await generateChatReply({
+            traceId: 'trace', userId: 'u1', channelId: 'c1', messageId: 'm1', userText: 'Query'
+        });
+
+        const chatCall = mockChatFn.mock.calls[0][0];
+        expect(chatCall.tools).toHaveLength(1);
+        expect(chatCall.tools[0].function.name).toBe('google_search');
     });
 });

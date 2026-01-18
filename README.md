@@ -1,150 +1,123 @@
-# Sage v0.2 (Chat Only)
+# Sage v0.1 Beta
 
-A Discord duo-companion bot powered by Pollinations AI.
+[![CI](https://github.com/BokX1/Sage/actions/workflows/ci.yml/badge.svg)](https://github.com/BokX1/Sage/actions/workflows/ci.yml)
 
-## Prerequisites
+A personalized Discord chatbot powered by Pollinations AI with user memory and adaptive responses.
 
-- Node.js (LTS)
-- npm (or pnpm if available)
-- Docker (for Postgres)
+## ✨ Features
 
-## Quick Start
+- **Personalized Memory** - Remembers user preferences and adapts responses over time
+- **Multi-LLM Support** - Works with Pollinations (default) or native Gemini
+- **Smart Rate Limiting** - Prevents abuse with configurable limits
+- **Structured Logging** - Production-ready logging with Pino
+- **Type-Safe** - Built with TypeScript and strict validation
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone and install
+# Clone and install
 git clone https://github.com/BokX1/Sage.git
 cd Sage
 npm ci
 
-# 2. Configure environment
+# Configure environment
 cp .env.example .env
-# Edit .env with your actual values (Strictly validated on startup!)
+# Edit .env with your values
 
-# 3. Setup database
+# Setup database
 docker-compose up -d          # Start Postgres
 npx prisma migrate dev        # Run migrations
 
-# 4. Run bot
+# Run bot
 npm run dev                   # Development mode
 ```
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
-### Required Environment Variables
+### Required Variables
 
 | Variable | Description |
 |----------|-------------|
-| `DISCORD_TOKEN` | Your Discord bot token from [Discord Developer Portal](https://discord.com/developers/applications) |
+| `DISCORD_TOKEN` | Bot token from [Discord Developer Portal](https://discord.com/developers/applications) |
 | `DISCORD_APP_ID` | Your Discord application ID |
 | `DATABASE_URL` | Database connection string |
 
-### LLM Configuration (Pollinations)
-
-Sage uses [Pollinations](https://pollinations.ai) as the default LLM brain.
+### LLM Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `pollinations` | LLM provider. |
-| `POLLINATIONS_BASE_URL` | `https://gen.pollinations.ai/v1` | API endpoint |
-| `POLLINATIONS_MODEL` | `gemini` | Model to use |
+| `LLM_PROVIDER` | `pollinations` | `pollinations` or `gemini` |
+| `POLLINATIONS_MODEL` | `gemini` | Model to use with Pollinations |
+| `GEMINI_API_KEY` | - | Required if using native Gemini |
 
-*Native Gemini support available via `LLM_PROVIDER=gemini`.*
-
-### Other Settings
+### Bot Behavior
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RATE_LIMIT_MAX` | `5` | Max requests per window |
-| `RATE_LIMIT_WINDOW_SEC` | `10` | Rate limit window in seconds |
-| `AUTOPILOT_LEVEL` | `cautious` | `manual`, `cautious`, or `full` |
-| `LOG_LEVEL` | `info` | Logging verbosity |
+| `RATE_LIMIT_WINDOW_SEC` | `10` | Rate limit window (seconds) |
+| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 
 ---
 
-## 🔒 Security Best Practices
-
-### Never Commit Secrets
-
-- `.env` files are gitignored - **never commit them**
-- Use `.env.example` as a template with placeholder values only
-- If you accidentally expose a token, **rotate it immediately**
-
-### Environment Setup
-
-**Local Development:**
+## 🛠️ Development
 
 ```bash
-cp .env.example .env
-# Edit .env with your actual secrets
+npm run dev       # Start with hot reload
+npm run build     # Compile TypeScript
+npm run lint      # Run ESLint
+npm test          # Run tests
+npm run doctor    # Check configuration
+npm run cert      # Full certification suite
 ```
 
-**GitHub Actions / CI:**
-
-- Add secrets via Repository Settings → Secrets and Variables → Actions
-- Reference as `${{ secrets.DISCORD_TOKEN }}` in workflows
-
-**Hosting Platforms (Railway, Render, Fly.io, etc.):**
-
-- Use the platform's secrets/environment variable UI
-- Never put secrets in your Dockerfile or code
-
-### Verifying No Secrets in Code
+### Database
 
 ```bash
-# Scan for potential secrets (should return nothing)
-git grep -i "token\|api_key\|secret" -- ':!*.example' ':!*.md'
+docker-compose up -d      # Start Postgres
+npx prisma migrate dev    # Run migrations
+npx prisma studio         # Open DB GUI
 ```
 
 ---
 
-## Running Locally
+## 🔐 Security
 
-### Start Database
-
-```bash
-docker-compose up -d
-```
-
-### Run Migrations
-
-```bash
-npx prisma migrate dev
-```
-
-### Start Bot (Dev Mode)
-
-```bash
-npm run dev
-```
-
-### Start Bot (Production)
-
-```bash
-npm run build
-npm start
-```
-
-### Run Diagnostics
-
-```bash
-npm run doctor
-```
-
-This will verify:
-
-- Discord Token: `[PRESENT]` / `[MISSING]`
-- Discord App ID: Present
-- LLM Provider: `pollinations` (or your override)
-- Pollinations Model: `deepseek` (or your override)
-- Pollinations API Key: `[PRESENT]` / `[NOT SET - Optional]`
+- `.env` files are gitignored — **never commit them**
+- Use `.env.example` as a template
+- If a token is exposed, **rotate it immediately**
 
 ---
 
-## Invite Bot to Server
+## 🏗️ Architecture
 
-Replace `YOUR_APP_ID` with your `DISCORD_APP_ID`:
+```
+┌─────────────────┐     ┌──────────────┐     ┌─────────────┐
+│  Discord.js     │────▶│  Chat Engine │────▶│  LLM Client │
+│  (Events)       │     │  (Core)      │     │  (Provider) │
+└─────────────────┘     └──────────────┘     └─────────────┘
+                               │
+                               ▼
+                        ┌──────────────┐
+                        │ User Profile │
+                        │ (Prisma DB)  │
+                        └──────────────┘
+```
+
+- **Chat Engine** - Generates responses with LLM
+- **User Profile** - Stores personalization memory per user
+- **Profile Updater** - Background process to learn from conversations
+- **Safety Gates** - Rate limiting and abuse prevention
+
+---
+
+## 🤖 Invite to Server
+
+Replace `YOUR_APP_ID`:
 
 ```
 https://discord.com/api/oauth2/authorize?client_id=YOUR_APP_ID&permissions=277025687552&scope=bot%20applications.commands
@@ -152,49 +125,6 @@ https://discord.com/api/oauth2/authorize?client_id=YOUR_APP_ID&permissions=27702
 
 ---
 
-## Testing & Quality
-
-Sage adheres to strict coding standards:
-
-```bash
-npm test              # Run unit tests
-npm run lint          # Run ESLint (Flat Config)
-npm run build         # Build TypeScript (Strict Mode)
-npm run cert          # Full certification suite
-```
-
-**CI/CD**:
-
-- GitHub Actions automatically test and build on push.
-- Husky prevents committing code that fails lint/tests.
-
----
-
-## Disabling LLM (Deterministic Mode)
-
-To run without any LLM calls (faster, no API dependencies):
-
-```env
-LLM_PROVIDER=off
-```
-
-The bot will fall back to deterministic/rule-based responses.
-
----
-
-## Architecture
-
-Sage is a **Chat-Only Personalized Bot**.
-
-1. **Chat Engine** - Generates single-turn responses using an LLM.
-2. **Personalization Memory** - Maintains a compressed summary of user preferences and facts in the database (`UserProfile`).
-3. **Profile Updater** - Background process that analyzes conversations to update the user's personality summary.
-4. **Safety Gates** - Rate limits and serious mode switches prevent abuse.
-
-There are NO complex tool execution loops, artifacts, or side-effects. Just pure conversation.
-
----
-
-## License
+## 📄 License
 
 MIT

@@ -1,5 +1,3 @@
-
-
 export type LLMRole = 'system' | 'user' | 'assistant';
 
 export interface LLMChatMessage {

@@ -6,24 +6,24 @@ import { registerMessageCreateHandler } from './bot/handlers/messageCreate';
 import { registerInteractionCreateHandler } from './bot/handlers/interactionCreate';
 
 async function main() {
-    if (!config.DISCORD_TOKEN) {
-        logger.error('DISCORD_TOKEN is missing');
-        process.exit(1);
-    }
+  if (!config.DISCORD_TOKEN) {
+    logger.error('DISCORD_TOKEN is missing');
+    process.exit(1);
+  }
 
-    // Register handlers (idempotent)
-    registerMessageCreateHandler();
-    registerInteractionCreateHandler();
+  // Register handlers (idempotent)
+  registerMessageCreateHandler();
+  registerInteractionCreateHandler();
 
-    client.once('ready', async () => {
-        logger.info(`Logged in as ${client.user?.tag}! (Sage v0.2 Chat Only - Ready)`);
-        await registerCommands();
-    });
+  client.once('ready', async () => {
+    logger.info(`Logged in as ${client.user?.tag}! (Sage v0.1 Beta - Ready)`);
+    await registerCommands();
+  });
 
-    await client.login(config.DISCORD_TOKEN);
+  await client.login(config.DISCORD_TOKEN);
 }
 
 main().catch((err) => {
-    logger.error(err);
-    process.exit(1);
+  logger.error(err);
+  process.exit(1);
 });
