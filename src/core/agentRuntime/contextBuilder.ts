@@ -2,6 +2,7 @@ import { LLMChatMessage } from '../llm/types';
 import { composeSystemPrompt } from './promptComposer';
 import { config } from '../config/env';
 import { budgetContextBlocks, ContextBlock } from './contextBudgeter';
+import { StyleProfile } from './styleClassifier';
 
 export interface BuildContextMessagesParams {
     /** User profile summary for personalization (may be null) */
@@ -20,9 +21,11 @@ export interface BuildContextMessagesParams {
     intentHint?: string | null;
     /** Relationship hints between users (D7) */
     relationshipHints?: string | null;
+    /** Detected style profile (D8) */
+    style?: StyleProfile;
 
     // ================================================================
-    // TODO (D2/D4/D5): Future context expansion points
+    // TODO (D2/D4): Future context expansion points
     // ----------------------------------------------------------------
     // recentTranscript?: LLMChatMessage[];  // D2: recent channel messages
     // channelSummary?: string;               // D4: channel context summary
@@ -31,16 +34,7 @@ export interface BuildContextMessagesParams {
 
 /**
  * Build the context messages array for an LLM chat turn.
- * Output ordering matches current chatEngine behavior:
- *   1. system (base prompt)
- *   2. system (truncation notice) if needed
- *   3. system (personalization memory) if present
- *   4. system (channel profile summary) if present
- *   5. system (channel rolling summary) if present
- *   6. system (recent transcript) if present
- *   7. system (intent hint) if present
- *   8. assistant (replyToBotText) if present
- *   9. user (userText)
+ * Output ordering matches current chatEngine behavior
  */
 export function buildContextMessages(params: BuildContextMessagesParams): LLMChatMessage[] {
     const {
@@ -52,13 +46,14 @@ export function buildContextMessages(params: BuildContextMessagesParams): LLMCha
         recentTranscript,
         intentHint,
         relationshipHints,
+        style,
     } = params;
 
     const blocks: ContextBlock[] = [
         {
             id: 'base_system',
             role: 'system',
-            content: composeSystemPrompt(),
+            content: composeSystemPrompt({ style }),
             priority: 100,
             truncatable: false,
         },

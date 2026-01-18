@@ -62,6 +62,7 @@ const envSchema = z.object({
   // Context Budgeting (D5)
   CONTEXT_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(8000),
   CONTEXT_RESERVED_OUTPUT_TOKENS: z.coerce.number().int().positive().default(1200),
+  SYSTEM_PROMPT_MAX_TOKENS: z.coerce.number().int().positive().default(1500),
   TOKEN_ESTIMATOR: z.enum(['heuristic']).default('heuristic'),
   TOKEN_HEURISTIC_CHARS_PER_TOKEN: z.coerce.number().int().positive().default(4),
   CONTEXT_BLOCK_MAX_TOKENS_TRANSCRIPT: z.coerce.number().int().positive().default(1800),

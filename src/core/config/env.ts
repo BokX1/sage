@@ -29,6 +29,7 @@ export const config = {
   // Context Budgeting (D5)
   contextMaxInputTokens: newConfig.CONTEXT_MAX_INPUT_TOKENS,
   contextReservedOutputTokens: newConfig.CONTEXT_RESERVED_OUTPUT_TOKENS,
+  systemPromptMaxTokens: newConfig.SYSTEM_PROMPT_MAX_TOKENS,
   tokenEstimator: newConfig.TOKEN_ESTIMATOR,
   tokenHeuristicCharsPerToken: newConfig.TOKEN_HEURISTIC_CHARS_PER_TOKEN,
   contextBlockMaxTokensTranscript: newConfig.CONTEXT_BLOCK_MAX_TOKENS_TRANSCRIPT,

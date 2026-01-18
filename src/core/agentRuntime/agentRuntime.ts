@@ -12,6 +12,7 @@ import { runToolCallLoop, ToolCallLoopResult } from './toolCallLoop';
 import { getChannelSummaryStore } from '../summary/channelSummaryStoreRegistry';
 import { howLongInVoiceToday, whoIsInVoice } from '../voice/voiceQueries';
 import { formatHowLongToday, formatWhoInVoice } from '../voice/voiceFormat';
+import { classifyStyle } from './styleClassifier';
 
 /**
  * Google Search tool definition for OpenAI/Pollinations format.
@@ -171,6 +172,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
     }
 
     // 1. Build context messages
+    const style = classifyStyle(userText);
     const messages = buildContextMessages({
         userProfileSummary,
         replyToBotText,
@@ -180,6 +182,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
         channelProfileSummary: profileSummaryText,
         intentHint: intent ?? null,
         relationshipHints: relationshipHintsText,
+        style,
     });
 
     logger.debug({ traceId, messages }, 'Agent runtime: built context messages');
