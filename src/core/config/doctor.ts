@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { config } from './env';
 import { getLLMClient } from '../llm';
 
