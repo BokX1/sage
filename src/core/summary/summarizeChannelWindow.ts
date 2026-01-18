@@ -111,7 +111,7 @@ async function summarizeWithPrompt(params: {
     windowStart: Date;
     windowEnd: Date;
 }): Promise<StructuredSummary> {
-    const client = getSummaryClient();
+    const { client, provider } = getSummaryClient();
     const systemPrompt = buildSystemPrompt();
 
     const messages: LLMChatMessage[] = [
@@ -120,7 +120,7 @@ async function summarizeWithPrompt(params: {
     ];
 
     try {
-        const json = await tryChat(client, messages, false);
+        const json = await tryChat(client, messages, provider, false);
         return normalizeSummary(json, params.windowStart, params.windowEnd);
     } catch (error) {
         logger.warn({ error }, 'Channel summary: JSON parse failed after retry');
@@ -132,21 +132,26 @@ function buildSystemPrompt(): string {
     return `You are a summarization engine for Discord channels.\nReturn ONLY valid JSON with keys: summaryText, topics, threads, unresolved, glossary.\nRules:\n- summaryText: 3-6 sentences, concise, <= ${appConfig.SUMMARY_MAX_CHARS} characters.\n- topics/threads/unresolved: arrays of short strings (max 6 each).\n- glossary: object mapping names/projects to short descriptions (max 6 entries).\n- If a field has no items, return an empty array/object.\n- Do not include markdown or extra text.`;
 }
 
-function getSummaryClient(): LLMClient {
+function getSummaryClient(): { client: LLMClient; provider: 'pollinations' | 'gemini' | 'noop' } {
     const providerOverride = appConfig.SUMMARY_PROVIDER?.trim();
     if (!providerOverride || providerOverride === llmConfig.llmProvider) {
-        return getLLMClient();
+        return {
+            client: getLLMClient(),
+            provider: llmConfig.llmProvider as 'pollinations' | 'gemini' | 'noop',
+        };
     }
 
-    return createLLMClient(providerOverride as 'pollinations' | 'gemini' | 'noop');
+    const provider = providerOverride as 'pollinations' | 'gemini' | 'noop';
+    return { client: createLLMClient(provider), provider };
 }
 
 async function tryChat(
     client: LLMClient,
     messages: LLMChatMessage[],
+    provider: 'pollinations' | 'gemini' | 'noop',
     retry: boolean,
 ): Promise<Record<string, unknown>> {
-    const isGeminiNative = llmConfig.llmProvider === 'gemini';
+    const isGeminiNative = provider === 'gemini';
 
     const payload: LLMRequest = {
         messages,
@@ -176,7 +181,7 @@ async function tryChat(
     } catch (error) {
         if (!retry) {
             logger.warn('Channel summary: invalid JSON, retrying once');
-            return tryChat(client, messages, true);
+            return tryChat(client, messages, provider, true);
         }
         throw error;
     }
