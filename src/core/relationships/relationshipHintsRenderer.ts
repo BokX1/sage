@@ -81,7 +81,7 @@ export async function renderRelationshipHints(params: {
         }
 
         return result;
-    } catch (error) {
+    } catch (_error) {
         // Non-fatal: return null if rendering fails
         return null;
     }

@@ -1,5 +1,5 @@
 import { logger } from '../../utils/logger';
-import { getGuildPresence, VoicePresenceMember } from './voicePresenceIndex';
+import { getGuildPresence } from './voicePresenceIndex';
 import { updateFromVoiceOverlap } from '../relationships/relationshipGraph';
 
 /**

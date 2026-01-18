@@ -23,6 +23,8 @@ export interface BuildContextMessagesParams {
     relationshipHints?: string | null;
     /** Detected style profile (D8) */
     style?: StyleProfile;
+    /** Expert packets from MoE orchestration (D9) */
+    expertPackets?: string | null;
 
     // ================================================================
     // TODO (D2/D4): Future context expansion points
@@ -47,6 +49,7 @@ export function buildContextMessages(params: BuildContextMessagesParams): LLMCha
         intentHint,
         relationshipHints,
         style,
+        expertPackets,
     } = params;
 
     const blocks: ContextBlock[] = [
@@ -99,6 +102,17 @@ export function buildContextMessages(params: BuildContextMessagesParams): LLMCha
             content: relationshipHints,
             priority: 65, // Between profile_summary (70) and rolling_summary (60)
             hardMaxTokens: config.contextBlockMaxTokensRelationshipHints,
+            truncatable: true,
+        });
+    }
+
+    if (expertPackets) {
+        blocks.push({
+            id: 'expert_packets',
+            role: 'system',
+            content: expertPackets,
+            priority: 55, // Between rolling_summary (60) and transcript (50)
+            hardMaxTokens: config.contextBlockMaxTokensExperts,
             truncatable: true,
         });
     }

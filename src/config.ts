@@ -76,6 +76,17 @@ const envSchema = z.object({
     .transform((v) => v === 'true')
     .default('true'),
 
+  // D9: MoE Orchestration
+  CONTEXT_BLOCK_MAX_TOKENS_EXPERTS: z.coerce.number().int().positive().default(1200),
+  GOVERNOR_REWRITE_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .default('true'),
+  TRACE_ENABLED: z
+    .enum(['true', 'false'])
+    .transform((v) => v === 'true')
+    .default('true'),
+
   // Relationship Hints (D7)
   CONTEXT_BLOCK_MAX_TOKENS_RELATIONSHIP_HINTS: z.coerce.number().int().positive().default(600),
   RELATIONSHIP_HINTS_MAX_EDGES: z.coerce.number().int().positive().default(10),

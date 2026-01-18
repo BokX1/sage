@@ -13,6 +13,10 @@ import { getChannelSummaryStore } from '../summary/channelSummaryStoreRegistry';
 import { howLongInVoiceToday, whoIsInVoice } from '../voice/voiceQueries';
 import { formatHowLongToday, formatWhoInVoice } from '../voice/voiceFormat';
 import { classifyStyle } from './styleClassifier';
+import { decideRoute } from '../orchestration/router';
+import { runExperts } from '../orchestration/runExperts';
+import { governOutput } from '../orchestration/governor';
+import { upsertTraceStart, updateTraceEnd } from '../trace/agentTraceRepo';
 
 /**
  * Google Search tool definition for OpenAI/Pollinations format.
@@ -51,6 +55,8 @@ export interface RunChatTurnParams {
     /** Optional intent hint from invocation detection */
     intent?: string | null;
     mentionedUserIds?: string[];
+    /** Invocation method for router */
+    invokedBy?: 'mention' | 'reply' | 'wakeword' | 'command';
 }
 
 export interface RunChatTurnResult {
@@ -66,11 +72,15 @@ export interface RunChatTurnResult {
  * Run a single chat turn through the agent runtime.
  * This is the main orchestration entrypoint.
  *
- * Flow:
- * 1. Build context messages (system prompt + personalization + conversation context)
- * 2. Call LLM client (same provider logic as chatEngine)
- * 3. If response is tool_calls envelope, run tool loop
- * 4. Return final reply
+ * Flow (D9):
+ * 1. Router classifies intent
+ * 2. Run expert queries (cheap DB lookups)
+ * 3. Persist trace start
+ * 4. Build context with expert packets
+ * 5. Call LLM (single call by default)
+ * 6. Run governor (post-process safety)
+ * 7. Persist trace end
+ * 8. Return governed reply
  */
 export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTurnResult> {
     const {
@@ -83,8 +93,10 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
         replyToBotText,
         intent,
         mentionedUserIds,
+        invokedBy = 'mention',
     } = params;
 
+    // Voice fast-path: Answer simple voice queries without routing/LLM
     const normalizedText = userText.toLowerCase();
     const isWhoInVoice =
         /\bwho('?s| is)? in voice\b/.test(normalizedText) || /\bwho in voice\b/.test(normalizedText);
@@ -103,7 +115,45 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
             const result = await howLongInVoiceToday({ guildId, userId: targetUserId });
             return { replyText: formatHowLongToday({ userId: targetUserId, ms: result.ms }) };
         } catch (error) {
-            logger.warn({ error, guildId, userId }, 'Voice fast-path failed, falling back to LLM');
+            logger.warn({ error, guildId, userId }, 'Voice fast-path failed, falling back to router');
+        }
+    }
+
+    // D9: Step 1 - Router classifies intent
+    const route = decideRoute({
+        userText,
+        invokedBy,
+        hasGuild: !!guildId,
+    });
+
+    logger.debug({ traceId, route }, 'Router decision');
+
+    // D9: Step 2 - Run experts (cheap DB queries)
+    const expertPackets = await runExperts({
+        experts: route.experts,
+        guildId,
+        channelId,
+        userId,
+        traceId,
+    });
+
+    const expertPacketsText = expertPackets.map((p) => `[${p.name}] ${p.content}`).join('\n\n');
+
+    // D9: Step 3 - Persist trace start
+    if (appConfig.TRACE_ENABLED) {
+        try {
+            await upsertTraceStart({
+                id: traceId,
+                guildId,
+                channelId,
+                userId,
+                routeKind: route.kind,
+                routerJson: route,
+                expertsJson: expertPackets.map((p) => ({ name: p.name, json: p.json })),
+                tokenJson: {},
+            });
+        } catch (error) {
+            logger.warn({ error, traceId }, 'Failed to persist trace start');
         }
     }
 
@@ -171,7 +221,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
         }
     }
 
-    // 1. Build context messages
+    // D9: Step 4 - Build context with expert packets
     const style = classifyStyle(userText);
     const messages = buildContextMessages({
         userProfileSummary,
@@ -183,41 +233,42 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
         intentHint: intent ?? null,
         relationshipHints: relationshipHintsText,
         style,
+        expertPackets: expertPacketsText || null,
     });
 
-    logger.debug({ traceId, messages }, 'Agent runtime: built context messages');
+    logger.debug({ traceId, route, expertCount: expertPackets.length }, 'Agent runtime: built context with experts');
 
-    // 2. Get LLM client and configure tools
+    // D9: Step 5 - Call LLM with route temperature
     const client = getLLMClient();
     const isGeminiNative = config.llmProvider === 'gemini';
     const isPollinations = config.llmProvider === 'pollinations';
 
-    // Build native search tools (same as existing chatEngine)
+    // Build native search tools if route allows
     const nativeTools: unknown[] = [];
-    if (isGeminiNative) {
-        nativeTools.push({ googleSearch: {} });
-    } else if (isPollinations) {
-        nativeTools.push(GOOGLE_SEARCH_TOOL);
+    if (route.allowTools) {
+        if (isGeminiNative) {
+            nativeTools.push({ googleSearch: {} });
+        } else if (isPollinations) {
+            nativeTools.push(GOOGLE_SEARCH_TOOL);
+        }
     }
 
-    // 3. Initial LLM call
-    let replyText = '';
+    let draftText = '';
+    let toolsExecuted = false;
     try {
         const response = await client.chat({
             messages,
             model: isGeminiNative ? config.geminiModel : undefined,
             tools: nativeTools.length > 0 ? nativeTools : undefined,
             toolChoice: isGeminiNative || isPollinations ? 'auto' : undefined,
-            temperature: 0.7,
+            temperature: route.temperature,
         });
 
-        replyText = response.content;
+        draftText = response.content;
 
-        // 4. Check if response is a tool_calls envelope for custom tools
-        // Only process if we have custom tools registered
-        if (globalToolRegistry.listNames().length > 0) {
-            // Check if this looks like a tool call envelope
-            const trimmed = replyText.trim();
+        // Check if response is a tool_calls envelope for custom tools
+        if (route.allowTools && globalToolRegistry.listNames().length > 0) {
+            const trimmed = draftText.trim();
             const strippedFence = trimmed.startsWith('```')
                 ? trimmed.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```$/, '')
                 : trimmed;
@@ -225,8 +276,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
             try {
                 const parsed = JSON.parse(strippedFence);
                 if (parsed?.type === 'tool_calls' && Array.isArray(parsed?.calls)) {
-                    // Run tool call loop
-                    logger.debug({ traceId }, 'Agent runtime: detected tool_calls envelope, running loop');
+                    logger.debug({ traceId }, 'Tool calls detected, running loop');
 
                     const toolLoopResult = await runToolCallLoop({
                         client,
@@ -236,28 +286,45 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
                         model: isGeminiNative ? config.geminiModel : undefined,
                     });
 
-                    return {
-                        replyText: toolLoopResult.replyText,
-                        debug: {
-                            toolsExecuted: toolLoopResult.toolsExecuted,
-                            toolLoopResult,
-                            messages,
-                        },
-                    };
+                    draftText = toolLoopResult.replyText;
+                    toolsExecuted = true;
                 }
             } catch {
                 // Not JSON, treat as normal response
             }
         }
     } catch (err) {
-        logger.error({ error: err, traceId }, 'Agent runtime: LLM call error');
-        return {
-            replyText: "I'm having trouble connecting right now. Please try again later.",
-        };
+        logger.error({ error: err, traceId }, 'LLM call error');
+        draftText = "I'm having trouble connecting right now. Please try again later.";
     }
 
+    // D9: Step 6 - Governor post-processes draft
+    const governorResult = await governOutput({
+        traceId,
+        route,
+        draftText,
+        llm: client,
+        rewriteEnabled: appConfig.GOVERNOR_REWRITE_ENABLED,
+    });
+
+    // D9: Step 7 - Persist trace end
+    if (appConfig.TRACE_ENABLED) {
+        try {
+            await updateTraceEnd({
+                id: traceId,
+                governorJson: governorResult,
+                toolJson: toolsExecuted ? { executed: true } : undefined,
+                replyText: governorResult.finalText,
+            });
+        } catch (error) {
+            logger.warn({ error, traceId }, 'Failed to persist trace end');
+        }
+    }
+
+    logger.debug({ traceId, governorActions: governorResult.actions }, 'Chat turn complete');
+
     return {
-        replyText,
-        debug: { messages },
+        replyText: governorResult.finalText,
+        debug: { messages, toolsExecuted },
     };
 }

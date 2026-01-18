@@ -103,6 +103,11 @@ export function registerInteractionCreateHandler() {
           return;
         }
 
+        if (subcommandGroup === 'admin' && subcommand === 'trace') {
+          await handleAdminTrace(interaction);
+          return;
+        }
+
         await interaction.reply({ content: 'Unknown subcommand.', ephemeral: true });
         return;
       }
@@ -318,5 +323,91 @@ async function handleAdminRelationshipGraph(interaction: ChatInputCommandInterac
   } catch (error) {
     logger.error({ error, guildId }, 'handleAdminRelationshipGraph error');
     await interaction.editReply('Failed to retrieve relationship graph.');
+  }
+}
+
+async function handleAdminTrace(interaction: ChatInputCommandInteraction) {
+  if (!isAdmin(interaction)) {
+    await interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    return;
+  }
+
+  const traceId = interaction.options.getString('trace_id');
+  const limit = interaction.options.getInteger('limit') ?? 5;
+  const guildId = interaction.guildId;
+
+  if (!guildId) {
+    await interaction.reply({ content: 'This command can only be used in a guild.', ephemeral: true });
+    return;
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    const { getTraceById, listRecentTraces } = await import('../../core/trace/agentTraceRepo');
+    const { logAdminAction, computeParamsHash } = await import(
+      '../../core/relationships/adminAuditRepo'
+    );
+
+    if (traceId) {
+      // Show single trace
+      const trace = await getTraceById(traceId);
+
+      if (!trace) {
+        await interaction.editReply(`No trace found with ID: ${traceId}`);
+        return;
+      }
+
+      const router = trace.routerJson as any;
+      const governor = trace.governorJson as any;
+      const _experts = trace.expertsJson as any;
+
+      const lines = [
+        `**Trace: \`${trace.id}\`**`,
+        `**Route**: ${trace.routeKind}`,
+        `**Temp**: ${router.temperature ?? 'N/A'}`,
+        `**Experts**: ${router.experts?.join(', ') ?? 'none'}`,
+        `**Governor**: ${governor.actions?.length > 0 ? governor.actions.join(', ') : 'no actions'}`,
+        `**Flagged**: ${governor.flagged ? 'Yes' : 'No'}`,
+        `**Created**: ${trace.createdAt.toISOString()}`,
+      ];
+
+      await logAdminAction({
+        guildId,
+        adminId: interaction.user.id,
+        command: 'sage_admin_trace',
+        paramsHash: computeParamsHash({ traceId }),
+      });
+
+      await interaction.editReply(lines.join('\n'));
+    } else {
+      // Show recent traces
+      const traces = await listRecentTraces({ guildId, limit });
+
+      if (traces.length === 0) {
+        await interaction.editReply('No traces found for this guild.');
+        return;
+      }
+
+      const lines = [`**Recent Traces (last ${limit})**:`];
+      for (const trace of traces) {
+        const _router = trace.routerJson as any;
+        lines.push(
+          `- \`${trace.id.slice(0, 8)}...\`: ${trace.routeKind} (${new Date(trace.createdAt).toLocaleString()})`,
+        );
+      }
+
+      await logAdminAction({
+        guildId,
+        adminId: interaction.user.id,
+        command: 'sage_admin_trace',
+        paramsHash: computeParamsHash({ guildId, limit }),
+      });
+
+      await interaction.editReply(lines.join('\n'));
+    }
+  } catch (error) {
+    logger.error({ error, guildId }, 'handleAdminTrace error');
+    await interaction.editReply('Failed to retrieve trace data.');
   }
 }

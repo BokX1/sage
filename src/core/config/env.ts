@@ -50,4 +50,9 @@ export const config = {
   // Admin Access Control (D7)
   adminRoleIds: newConfig.ADMIN_ROLE_IDS,
   adminUserIds: newConfig.ADMIN_USER_IDS,
+
+  // MoE Orchestration (D9)
+  contextBlockMaxTokensExperts: newConfig.CONTEXT_BLOCK_MAX_TOKENS_EXPERTS,
+  governorRewriteEnabled: newConfig.GOVERNOR_REWRITE_ENABLED,
+  traceEnabled: newConfig.TRACE_ENABLED,
 };

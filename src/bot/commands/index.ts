@@ -55,6 +55,22 @@ const commands = [
             .addUserOption((opt) =>
               opt.setName('user').setDescription('Filter by user (optional)').setRequired(false),
             ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName('trace')
+            .setDescription('View recent agent traces')
+            .addStringOption((opt) =>
+              opt.setName('trace_id').setDescription('Specific trace ID').setRequired(false),
+            )
+            .addIntegerOption((opt) =>
+              opt
+                .setName('limit')
+                .setDescription('Number of traces (1-10)')
+                .setRequired(false)
+                .setMinValue(1)
+                .setMaxValue(10),
+            ),
         ),
     ),
 ].map((command) => command.toJSON());
