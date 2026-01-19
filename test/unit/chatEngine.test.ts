@@ -34,9 +34,7 @@ vi.mock('../../src/core/llm', () => ({
 
 // 4. Mock Config (Mutable)
 const mockConfig = vi.hoisted(() => ({
-  llmProvider: 'gemini',
-  geminiModel: 'gemini-pro',
-  openaiModel: 'gpt-4o',
+  llmProvider: 'pollinations',
 }));
 vi.mock('../../src/core/config/env', () => ({
   config: mockConfig,
@@ -58,7 +56,7 @@ describe('ChatEngine', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockChatFn.mockReset();
-    mockConfig.llmProvider = 'gemini';
+    mockConfig.llmProvider = 'pollinations';
   });
 
   it('should generate a reply using the LLM', async () => {

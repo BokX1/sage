@@ -18,13 +18,10 @@ vi.mock('../../../src/config', () => ({
 
 vi.mock('../../../src/core/config/env', () => ({
   config: {
-    llmProvider: 'noop',
+    llmProvider: 'pollinations',
     pollinationsBaseUrl: '',
     pollinationsApiKey: undefined,
     pollinationsModel: 'gemini',
-    geminiApiKey: undefined,
-    geminiModel: 'gemini',
-    geminiBaseUrl: undefined,
   },
 }));
 

@@ -133,30 +133,26 @@ function buildSystemPrompt(): string {
   return `You are a summarization engine for Discord channels.\nReturn ONLY valid JSON with keys: summaryText, topics, threads, unresolved, glossary.\nRules:\n- summaryText: 3-6 sentences, concise, <= ${appConfig.SUMMARY_MAX_CHARS} characters.\n- topics/threads/unresolved: arrays of short strings (max 6 each).\n- glossary: object mapping names/projects to short descriptions (max 6 entries).\n- If a field has no items, return an empty array/object.\n- Do not include markdown or extra text.`;
 }
 
-function getSummaryClient(): { client: LLMClient; provider: 'pollinations' | 'gemini' | 'noop' } {
+function getSummaryClient(): { client: LLMClient; provider: 'pollinations' } {
   const providerOverride = appConfig.SUMMARY_PROVIDER?.trim();
   if (!providerOverride || providerOverride === llmConfig.llmProvider) {
     return {
       client: getLLMClient(),
-      provider: llmConfig.llmProvider as 'pollinations' | 'gemini' | 'noop',
+      provider: 'pollinations',
     };
   }
 
-  const provider = providerOverride as 'pollinations' | 'gemini' | 'noop';
-  return { client: createLLMClient(provider), provider };
+  return { client: createLLMClient('pollinations'), provider: 'pollinations' };
 }
 
 async function tryChat(
   client: LLMClient,
   messages: LLMChatMessage[],
-  provider: 'pollinations' | 'gemini' | 'noop',
+  _provider: 'pollinations',
   retry: boolean,
 ): Promise<Record<string, unknown>> {
-  const isGeminiNative = provider === 'gemini';
-
   const payload: LLMRequest = {
     messages,
-    model: isGeminiNative ? llmConfig.geminiModel : undefined,
     responseFormat: retry ? undefined : 'json_object',
     maxTokens: 1024,
     temperature: 0,
@@ -184,7 +180,7 @@ async function tryChat(
         { error, content: response.content },
         'Channel summary: invalid JSON, retrying once',
       );
-      return tryChat(client, messages, provider, true);
+      return tryChat(client, messages, _provider, true);
     }
     throw error;
   }

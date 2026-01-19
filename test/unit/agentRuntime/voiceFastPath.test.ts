@@ -10,8 +10,7 @@ vi.mock('../../../src/core/llm', () => ({
 
 vi.mock('../../../src/core/config/env', () => ({
   config: {
-    llmProvider: 'noop',
-    geminiModel: 'gemini',
+    llmProvider: 'pollinations',
     logLevel: 'error',
   },
 }));

@@ -168,15 +168,12 @@ function extractFirstJsonObject(content: string): string | null {
 async function tryChat(
   client: LLMClient,
   messages: LLMChatMessage[],
-  provider: LLMProviderName,
+  _provider: LLMProviderName,
   retry: boolean,
 ): Promise<{ summary?: string } | null> {
-  const isGeminiNative = provider === 'gemini';
-
   // Keep responseFormat json_object for ALL attempts
   const payload: LLMRequest = {
     messages,
-    model: isGeminiNative ? config.geminiModel : undefined,
     responseFormat: 'json_object',
     maxTokens: 350,
     temperature: 0,
@@ -206,7 +203,7 @@ async function tryChat(
   if (!extracted) {
     if (!retry) {
       logger.warn('Profile Update: No JSON object found. Retrying...');
-      return tryChat(client, messages, provider, true);
+      return tryChat(client, messages, _provider, true);
     }
     // After retry fails, try repair pass
     return tryRepairPass(client, content);
@@ -221,7 +218,7 @@ async function tryChat(
     if (!retry) {
       // RETRY ONCE
       logger.warn('Profile Update: Invalid JSON received. Retrying with stronger prompt...');
-      return tryChat(client, messages, provider, true);
+      return tryChat(client, messages, _provider, true);
     }
 
     // After retry fails, try repair pass

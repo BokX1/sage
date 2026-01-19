@@ -1,5 +1,4 @@
 import { getLLMClient } from '../llm';
-import { config } from '../config/env';
 import { getUserProfile, upsertUserProfile } from '../memory/userProfileRepo';
 import { updateProfileSummary } from '../memory/profileUpdater';
 import { logger } from '../utils/logger';
@@ -85,7 +84,6 @@ export async function generateChatReply(params: {
 
   if (hasBanned) {
     const client = getLLMClient();
-    const isGeminiNative = config.llmProvider === 'gemini';
     try {
       const rewriteResponse = await client.chat({
         messages: [
@@ -96,7 +94,6 @@ export async function generateChatReply(params: {
           },
           { role: 'user', content: replyText },
         ],
-        model: isGeminiNative ? config.geminiModel : undefined,
         temperature: 0,
       });
       replyText = rewriteResponse.content;

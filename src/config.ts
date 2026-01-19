@@ -100,15 +100,10 @@ const envSchema = z.object({
   ADMIN_USER_IDS: z.string().default(''), // Comma-separated Discord user IDs
 
   // LLM - Pollinations (Default)
-  LLM_PROVIDER: z.enum(['pollinations', 'gemini', 'noop']).default('pollinations'),
+  LLM_PROVIDER: z.enum(['pollinations']).default('pollinations'),
   POLLINATIONS_BASE_URL: z.string().default('https://gen.pollinations.ai/v1'),
   POLLINATIONS_MODEL: z.string().default('gemini'),
   POLLINATIONS_API_KEY: z.string().optional(),
-
-  // LLM - Native Gemini
-  GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-2.0-flash-exp'),
-  GEMINI_BASE_URL: z.string().optional(),
 
   // Profile Memory LLM Override
   PROFILE_PROVIDER: z.string().default(''),

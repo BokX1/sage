@@ -23,10 +23,6 @@ export const config = {
   pollinationsApiKey: newConfig.POLLINATIONS_API_KEY,
   pollinationsModel: newConfig.POLLINATIONS_MODEL,
 
-  geminiApiKey: newConfig.GEMINI_API_KEY,
-  geminiModel: newConfig.GEMINI_MODEL,
-  geminiBaseUrl: newConfig.GEMINI_BASE_URL,
-
   // Context Budgeting (D5)
   contextMaxInputTokens: newConfig.CONTEXT_MAX_INPUT_TOKENS,
   contextReservedOutputTokens: newConfig.CONTEXT_RESERVED_OUTPUT_TOKENS,

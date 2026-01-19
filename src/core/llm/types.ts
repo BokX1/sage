@@ -28,4 +28,4 @@ export interface LLMClient {
   chat(request: LLMRequest): Promise<LLMResponse>;
 }
 
-export type LLMProviderName = 'pollinations' | 'noop' | 'gemini'; // Extensible
+export type LLMProviderName = 'pollinations'; // Pollinations-only runtime

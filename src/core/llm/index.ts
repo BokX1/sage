@@ -30,17 +30,8 @@ export function createLLMClient(
         apiKey: config.pollinationsApiKey,
         model: opts?.pollinationsModel ?? config.pollinationsModel,
       });
-    case 'gemini': {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { GeminiClient } = require('./providers/gemini');
-      return new GeminiClient({
-        apiKey: config.geminiApiKey,
-        model: config.geminiModel,
-        baseUrl: config.geminiBaseUrl,
-      });
-    }
     default:
-      // Fallback or no-op if no provider
+      // Fallback for any unknown provider
       logger.warn({ provider }, 'Unknown or unset LLM_PROVIDER, defaulting to Pollinations');
       return new PollinationsClient();
   }

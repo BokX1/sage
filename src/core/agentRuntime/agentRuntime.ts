@@ -2,7 +2,6 @@ import { config as appConfig } from '../../config';
 import { getRecentMessages } from '../awareness/channelRingBuffer';
 import { buildTranscriptBlock } from '../awareness/transcriptBuilder';
 import { getLLMClient } from '../llm';
-import { config } from '../config/env';
 import { LLMChatMessage } from '../llm/types';
 import { isLoggingEnabled } from '../settings/guildChannelSettings';
 import { logger } from '../utils/logger';
@@ -235,17 +234,11 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
 
   // D9: Step 5 - Call LLM with route temperature
   const client = getLLMClient();
-  const isGeminiNative = config.llmProvider === 'gemini';
-  const isPollinations = config.llmProvider === 'pollinations';
 
-  // Build native search tools if route allows
+  // Build native search tools if route allows (Pollinations format)
   const nativeTools: unknown[] = [];
   if (route.allowTools) {
-    if (isGeminiNative) {
-      nativeTools.push({ googleSearch: {} });
-    } else if (isPollinations) {
-      nativeTools.push(GOOGLE_SEARCH_TOOL);
-    }
+    nativeTools.push(GOOGLE_SEARCH_TOOL);
   }
 
   let draftText = '';
@@ -253,9 +246,8 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
   try {
     const response = await client.chat({
       messages,
-      model: isGeminiNative ? config.geminiModel : undefined,
       tools: nativeTools.length > 0 ? nativeTools : undefined,
-      toolChoice: isGeminiNative || isPollinations ? 'auto' : undefined,
+      toolChoice: nativeTools.length > 0 ? 'auto' : undefined,
       temperature: route.temperature,
     });
 
@@ -278,7 +270,6 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
             messages,
             registry: globalToolRegistry,
             ctx: { traceId, userId, channelId },
-            model: isGeminiNative ? config.geminiModel : undefined,
           });
 
           draftText = toolLoopResult.replyText;

@@ -16,7 +16,6 @@ vi.mock('../../../src/core/llm', () => ({
 vi.mock('../../../src/core/config/env', () => ({
   config: {
     llmProvider: 'pollinations',
-    geminiModel: 'test-model',
     profileProvider: '',
     profilePollinationsModel: '',
   },

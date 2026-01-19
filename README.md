@@ -71,9 +71,8 @@ npm run dev
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `pollinations` | `pollinations`, `gemini`, or `noop` |
+| `LLM_PROVIDER` | `pollinations` | LLM backend (Pollinations only) |
 | `POLLINATIONS_MODEL` | `gemini` | Model name for Pollinations API |
-| `GEMINI_API_KEY` | — | Required if using native Gemini |
 
 ### Bot Behavior
 
@@ -155,7 +154,7 @@ Discord Events → Ingest → Context Builder → LLM → Response
 | `agentRuntime` | MoE orchestration, context budgeting, prompt composition |
 | `awareness` | Message ring buffer, transcript building |
 | `chat` | Chat engine, response generation |
-| `llm` | Pollinations + Gemini providers, circuit breaker |
+| `llm` | Pollinations provider, circuit breaker |
 | `memory` | User profile storage and updates |
 | `orchestration` | Router, governor, expert runners |
 | `relationships` | Relationship graph, edge scoring, admin audit |
@@ -169,7 +168,7 @@ Discord Events → Ingest → Context Builder → LLM → Response
 - **Runtime**: Node.js + TypeScript
 - **Discord**: discord.js v14
 - **Database**: Prisma ORM (Postgres/SQLite)
-- **LLM**: Pollinations API (default) or Gemini
+- **LLM**: Pollinations API
 - **Validation**: Zod
 - **Logging**: Pino
 - **Testing**: Vitest
