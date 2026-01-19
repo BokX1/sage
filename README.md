@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/BokX1/Sage/actions/workflows/ci.yml/badge.svg)](https://github.com/BokX1/Sage/actions/workflows/ci.yml)
 
-**Sage** is a context-aware Discord bot that remembers conversations, tracks relationships, and generates personalized responses using LLM-powered intelligence.
+**Sage** is a context-aware Discord bot that remembers conversations, tracks relationships, and generates personalized responses using LLM-powered intelligence. Build By BokX1
 
 ---
 
