@@ -36,6 +36,16 @@ export async function runConfigDoctor() {
       sensitive: true,
       present: !!config.pollinationsApiKey,
     },
+    {
+      name: 'Profile Provider',
+      valid: true,
+      value: config.profileProvider || 'default (using LLM_PROVIDER)',
+    },
+    {
+      name: 'Profile Model',
+      valid: true,
+      value: config.profilePollinationsModel || 'default (using provider model)',
+    },
   ];
 
   const results = checks.map((c) => {

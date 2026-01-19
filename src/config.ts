@@ -109,6 +109,10 @@ const envSchema = z.object({
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default('gemini-2.0-flash-exp'),
   GEMINI_BASE_URL: z.string().optional(),
+
+  // Profile Memory LLM Override
+  PROFILE_PROVIDER: z.string().default(''),
+  PROFILE_POLLINATIONS_MODEL: z.string().default(''),
 });
 
 // Parse and validate or crash

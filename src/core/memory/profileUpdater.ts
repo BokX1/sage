@@ -1,7 +1,7 @@
-import { getLLMClient } from '../llm';
+import { getLLMClient, createLLMClient } from '../llm';
 import { config } from '../config/env';
 import { logger } from '../utils/logger';
-import { LLMClient, LLMChatMessage, LLMRequest } from '../llm/types';
+import { LLMClient, LLMChatMessage, LLMRequest, LLMProviderName } from '../llm/types';
 
 const UPDATE_SYSTEM_PROMPT = `You update a compact user profile summary for personalization.
 Rules:
@@ -9,8 +9,55 @@ Rules:
 - Store ONLY stable preferences and facts (e.g. "Favorite color is blue", "Lives in Paris", "Likes sci-fi").
 - Do NOT store raw chat logs, "User said", or "Assistant replied".
 - Do NOT store secrets, credentials, or PII.
-- If nothing new/stable is learned, return the previous summary.
+- If nothing new/stable is learned, return the previous summary unchanged.
+- ALWAYS return a JSON object, even if summary is unchanged; never return plain text.
 Output format: JSON exactly: {"summary":"..."}.`;
+
+// Cached profile client
+let profileClientCache: { client: LLMClient; provider: LLMProviderName } | null = null;
+
+/**
+ * Get the LLM client for profile updates.
+ * Uses PROFILE_PROVIDER and PROFILE_POLLINATIONS_MODEL overrides if configured.
+ */
+function getProfileClient(): { client: LLMClient; provider: LLMProviderName } {
+  if (profileClientCache) {
+    return profileClientCache;
+  }
+
+  const profileProvider = config.profileProvider?.trim() || '';
+  const profilePollinationsModel = config.profilePollinationsModel?.trim() || '';
+
+  // If no overrides at all, use default client
+  if (!profileProvider && !profilePollinationsModel) {
+    profileClientCache = {
+      client: getLLMClient(),
+      provider: config.llmProvider as LLMProviderName,
+    };
+    return profileClientCache;
+  }
+
+  // Determine provider (use override or fallback to default)
+  const provider = (profileProvider || config.llmProvider) as LLMProviderName;
+
+  // Build model overrides (Pollinations only)
+  const opts: { pollinationsModel?: string } = {};
+  if (profilePollinationsModel) {
+    opts.pollinationsModel = profilePollinationsModel;
+  }
+
+  profileClientCache = {
+    client: createLLMClient(provider, opts),
+    provider,
+  };
+
+  logger.debug(
+    { provider, pollinationsModel: opts.pollinationsModel },
+    'Profile updater using dedicated client',
+  );
+
+  return profileClientCache;
+}
 
 export async function updateProfileSummary(params: {
   previousSummary: string | null;
@@ -18,7 +65,7 @@ export async function updateProfileSummary(params: {
   assistantReply: string;
 }): Promise<string | null> {
   const { previousSummary, userMessage, assistantReply } = params;
-  const client = getLLMClient();
+  const { client, provider } = getProfileClient();
 
   const prompt = `Current Summary: ${previousSummary || 'None'}
 
@@ -29,15 +76,13 @@ Assistant: ${assistantReply}
 Update the summary based on the new interaction.`;
 
   try {
-    const isGeminiNative = config.llmProvider === 'gemini';
-
     const json = await tryChat(
       client,
       [
         { role: 'system', content: UPDATE_SYSTEM_PROMPT },
         { role: 'user', content: prompt },
       ],
-      isGeminiNative,
+      provider,
       false, // Initial attempt, no retry yet
     );
 
@@ -51,25 +96,94 @@ Update the summary based on the new interaction.`;
   }
 }
 
+/**
+ * Extract a balanced JSON object from a string.
+ * - First tries to extract from ```json ... ``` code blocks.
+ * - Then scans for the first '{' and tracks brace depth to find the matching '}'.
+ * - Correctly ignores braces inside JSON strings (handles \" and \\ escapes).
+ */
+export function extractBalancedJson(content: string): string | null {
+  // 1. Try extracting from code blocks first
+  const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    const inner = codeBlockMatch[1].trim();
+    // Validate there's a { in the code block
+    if (inner.includes('{')) {
+      return extractFirstJsonObject(inner);
+    }
+  }
+
+  // 2. Extract first balanced JSON object
+  return extractFirstJsonObject(content);
+}
+
+/**
+ * Extract the first complete top-level JSON object from the string.
+ * Uses brace depth tracking and properly handles strings.
+ */
+function extractFirstJsonObject(content: string): string | null {
+  const startIdx = content.indexOf('{');
+  if (startIdx === -1) {
+    return null;
+  }
+
+  let depth = 0;
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = startIdx; i < content.length; i++) {
+    const char = content[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+
+    if (char === '\\' && inString) {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"' && !escapeNext) {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === '{') {
+        depth++;
+      } else if (char === '}') {
+        depth--;
+        if (depth === 0) {
+          return content.slice(startIdx, i + 1);
+        }
+      }
+    }
+  }
+
+  // No complete object found
+  return null;
+}
+
 async function tryChat(
   client: LLMClient,
   messages: LLMChatMessage[],
-  isNative: boolean,
+  provider: LLMProviderName,
   retry: boolean,
 ): Promise<{ summary?: string } | null> {
-  const config = (await import('../config/env')).config;
+  const isGeminiNative = provider === 'gemini';
 
-  // First attempt: JSON Check (or Retry with Strong Prompt)
+  // Keep responseFormat json_object for ALL attempts
   const payload: LLMRequest = {
     messages,
-    model: isNative ? config.geminiModel : undefined,
-    responseFormat: retry ? undefined : 'json_object', // Disable json_object on retry
-    maxTokens: 1024,
+    model: isGeminiNative ? config.geminiModel : undefined,
+    responseFormat: 'json_object',
+    maxTokens: 350,
     temperature: 0,
   };
 
   if (retry) {
-    // Append strict instruction
+    // Append strict instruction on retry
     const strict =
       '\n\nIMPORTANT: Output ONLY valid JSON. No markdown. No text. Example: {"summary": "..."}';
     const last = messages[messages.length - 1];
@@ -82,48 +196,76 @@ async function tryChat(
   }
 
   const response = await client.chat(payload);
-  let content = response.content;
+  const content = response.content;
 
   logger.debug({ content, retry }, 'Profile Update Raw Response');
 
-  // Robust Extraction Strategy
-  // 1. Try identifying code block
-  const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (codeBlockMatch) {
-    content = codeBlockMatch[1];
-  }
+  // Extract JSON using balanced extractor
+  const extracted = extractBalancedJson(content);
 
-  // 2. Try identifying JSON object { ... }
-  // Find the first '{' and the last '}'
-  const jsonStart = content.indexOf('{');
-  const jsonEnd = content.lastIndexOf('}');
-
-  if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-    content = content.slice(jsonStart, jsonEnd + 1);
-  } else if (!retry) {
-    // If we can't even find brackets, retry immediately
-    logger.warn('Profile Update: No JSON brackets found. Retrying...');
-    return tryChat(client, messages, isNative, true);
+  if (!extracted) {
+    if (!retry) {
+      logger.warn('Profile Update: No JSON object found. Retrying...');
+      return tryChat(client, messages, provider, true);
+    }
+    // After retry fails, try repair pass
+    return tryRepairPass(client, content);
   }
 
   // Validate JSON
   try {
-    const json = JSON.parse(content);
+    const json = JSON.parse(extracted);
     return json;
   } catch (e) {
-    logger.debug({ error: e, content }, 'JSON Parse Error in profile update');
+    logger.debug({ error: e, extracted }, 'JSON Parse Error in profile update');
     if (!retry) {
       // RETRY ONCE
-      logger.warn('Profile Update: Invalid JSON received. Retrying with shim...');
-      return tryChat(client, messages, isNative, true);
+      logger.warn('Profile Update: Invalid JSON received. Retrying with stronger prompt...');
+      return tryChat(client, messages, provider, true);
     }
 
-    // Last ditch: Regex extraction for summary property
-    const summaryMatch = content.match(/"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-    if (summaryMatch) {
-      return { summary: summaryMatch[1] };
+    // After retry fails, try repair pass
+    return tryRepairPass(client, content);
+  }
+}
+
+/**
+ * Repair pass: Ask the LLM to convert raw output to valid JSON.
+ * This is a last-ditch effort when normal parsing fails.
+ */
+async function tryRepairPass(
+  client: LLMClient,
+  rawContent: string,
+): Promise<{ summary?: string } | null> {
+  logger.warn('Profile Update: Attempting repair pass...');
+
+  const repairSystemPrompt =
+    'Convert the following to JSON exactly: {"summary":"..."}. Output JSON only, nothing else.';
+
+  const payload: LLMRequest = {
+    messages: [
+      { role: 'system', content: repairSystemPrompt },
+      { role: 'user', content: rawContent },
+    ],
+    responseFormat: 'json_object',
+    temperature: 0,
+    maxTokens: 200,
+  };
+
+  try {
+    const response = await client.chat(payload);
+    const extracted = extractBalancedJson(response.content);
+
+    if (!extracted) {
+      logger.error({ content: response.content }, 'Profile Update: Repair pass failed - no JSON');
+      return null;
     }
 
-    throw e;
+    const json = JSON.parse(extracted);
+    logger.info('Profile Update: Repair pass succeeded');
+    return json;
+  } catch (error) {
+    logger.error({ error, rawContent }, 'Profile Update: Repair pass failed');
+    return null;
   }
 }

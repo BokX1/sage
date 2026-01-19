@@ -56,4 +56,8 @@ export const config = {
   contextBlockMaxTokensExperts: newConfig.CONTEXT_BLOCK_MAX_TOKENS_EXPERTS,
   governorRewriteEnabled: newConfig.GOVERNOR_REWRITE_ENABLED,
   traceEnabled: newConfig.TRACE_ENABLED,
+
+  // Profile Memory LLM Override
+  profileProvider: newConfig.PROFILE_PROVIDER,
+  profilePollinationsModel: newConfig.PROFILE_POLLINATIONS_MODEL,
 };

@@ -15,13 +15,20 @@ export function getLLMClient(): LLMClient {
   return instance!;
 }
 
-export function createLLMClient(provider: LLMProviderName): LLMClient {
+export interface LLMClientOptions {
+  pollinationsModel?: string;
+}
+
+export function createLLMClient(
+  provider: LLMProviderName,
+  opts?: LLMClientOptions,
+): LLMClient {
   switch (provider) {
     case 'pollinations':
       return new PollinationsClient({
         baseUrl: config.pollinationsBaseUrl,
         apiKey: config.pollinationsApiKey,
-        model: config.pollinationsModel,
+        model: opts?.pollinationsModel ?? config.pollinationsModel,
       });
     case 'gemini': {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
