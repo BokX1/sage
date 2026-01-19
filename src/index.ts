@@ -1,11 +1,13 @@
 import { client } from './bot/client';
 import { config } from './config';
 import { logger } from './utils/logger';
-import { registerCommands } from './bot/commands';
+
 import { registerMessageCreateHandler } from './bot/handlers/messageCreate';
 import { registerInteractionCreateHandler } from './bot/handlers/interactionCreate';
 import { registerVoiceStateUpdateHandler } from './bot/handlers/voiceStateUpdate';
 import { initChannelSummaryScheduler } from './core/summary/channelSummaryScheduler';
+
+import { registerReadyHandler } from './bot/handlers/ready';
 
 async function main() {
   if (!config.DISCORD_TOKEN) {
@@ -17,12 +19,10 @@ async function main() {
   registerMessageCreateHandler();
   registerInteractionCreateHandler();
   registerVoiceStateUpdateHandler(); // D1: Voice event ingestion
+  registerReadyHandler(client); // D1: Startup backfill & logging
   initChannelSummaryScheduler();
 
-  client.once('ready', async () => {
-    logger.info(`Logged in as ${client.user?.tag}! (Sage v0.1 Beta - Ready)`);
-    await registerCommands();
-  });
+
 
   await client.login(config.DISCORD_TOKEN);
 }

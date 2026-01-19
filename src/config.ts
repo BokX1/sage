@@ -47,7 +47,7 @@ const envSchema = z.object({
   MESSAGE_DB_STORAGE_ENABLED: z
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
-    .default('false'),
+    .default('true'),
   PROACTIVE_POSTING_ENABLED: z
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
@@ -59,6 +59,7 @@ const envSchema = z.object({
   SUMMARY_MAX_CHARS: z.coerce.number().int().positive().default(1800),
   SUMMARY_SCHED_TICK_SEC: z.coerce.number().int().positive().default(60),
   SUMMARY_PROVIDER: z.string().optional().default(''),
+  SUMMARY_MODEL: z.string().default('deepseek'),
 
   // Context Budgeting (D5)
   CONTEXT_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(8000),

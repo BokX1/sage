@@ -175,7 +175,7 @@ async function tryChat(
   const payload: LLMRequest = {
     messages,
     responseFormat: 'json_object',
-    maxTokens: 350,
+    maxTokens: 1024,
     temperature: 0,
   };
 
@@ -246,7 +246,7 @@ async function tryRepairPass(
     ],
     responseFormat: 'json_object',
     temperature: 0,
-    maxTokens: 200,
+    maxTokens: 1024,
   };
 
   try {

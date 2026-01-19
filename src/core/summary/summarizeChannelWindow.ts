@@ -135,14 +135,20 @@ function buildSystemPrompt(): string {
 
 function getSummaryClient(): { client: LLMClient; provider: 'pollinations' } {
   const providerOverride = appConfig.SUMMARY_PROVIDER?.trim();
+  const modelOverride = appConfig.SUMMARY_MODEL?.trim() || undefined;
+
   if (!providerOverride || providerOverride === llmConfig.llmProvider) {
+    // Use default provider but with summary-specific model
     return {
-      client: getLLMClient(),
+      client: createLLMClient('pollinations', { pollinationsModel: modelOverride }),
       provider: 'pollinations',
     };
   }
 
-  return { client: createLLMClient('pollinations'), provider: 'pollinations' };
+  return {
+    client: createLLMClient('pollinations', { pollinationsModel: modelOverride }),
+    provider: 'pollinations',
+  };
 }
 
 async function tryChat(
@@ -154,7 +160,7 @@ async function tryChat(
   const payload: LLMRequest = {
     messages,
     responseFormat: retry ? undefined : 'json_object',
-    maxTokens: 1024,
+    maxTokens: 4096,
     temperature: 0,
   };
 
