@@ -59,7 +59,7 @@ const envSchema = z.object({
   SUMMARY_MAX_CHARS: z.coerce.number().int().positive().default(1800),
   SUMMARY_SCHED_TICK_SEC: z.coerce.number().int().positive().default(60),
   SUMMARY_PROVIDER: z.string().optional().default(''),
-  SUMMARY_MODEL: z.string().default('gemini-large'),
+  SUMMARY_MODEL: z.string().default('gemini'),
 
   // Context Budgeting (D5)
   CONTEXT_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(16000),
@@ -108,7 +108,7 @@ const envSchema = z.object({
 
   // Profile Memory LLM Override
   PROFILE_PROVIDER: z.string().default(''),
-  PROFILE_POLLINATIONS_MODEL: z.string().default('gemini-large'),
+  PROFILE_POLLINATIONS_MODEL: z.string().default('gemini'),
 
   // Formatter Model (for JSON formatting in profile updates)
   FORMATTER_MODEL: z.string().default('qwen-coder'),

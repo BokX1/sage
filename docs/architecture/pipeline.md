@@ -14,11 +14,11 @@ flowchart TD
     D --> E["Router (Classify Intent)"]
     E --> F["runExperts"]
     F --> G["buildContextMessages"]
-    G --> H["Chat LLM<br/>gemini-large (temp=0.8)"]
+    G --> H["Chat LLM<br/>gemini (temp=0.8)"]
     H --> I["Governor (Post-process)"]
     I --> J["Reply to Discord"]
     J --> K["Profile Updater (Background)"]
-    K --> L["Analyst LLM<br/>gemini-large (temp=0.3)"]
+    K --> L["Analyst LLM<br/>gemini (temp=0.3)"]
     L --> M["Formatter LLM<br/>qwen-coder (temp=0.0)"]
     M --> N["upsertUserProfile"]
 ```
@@ -190,7 +190,7 @@ flowchart TD
 | **Chat** | `gemini` | `POLLINATIONS_MODEL` |
 | **Analyst** | `gemini-large` | `PROFILE_POLLINATIONS_MODEL` |
 | **Formatter** | `qwen-coder` | `FORMATTER_MODEL` |
-| **Summary Analyst** | `gemini-large` | `SUMMARY_MODEL` |
+| **Summary Analyst** | `gemini` | `SUMMARY_MODEL` |
 
 ### Token Budgets (Generous Defaults)
 
@@ -217,10 +217,10 @@ flowchart TD
 | `LLM_PROVIDER` | Powers all LLM calls | `pollinations` |
 | `POLLINATIONS_MODEL` | Default chat model | `gemini-large` |
 | `PROFILE_PROVIDER` | Profile LLM provider override | *empty* (uses default) |
-| `PROFILE_POLLINATIONS_MODEL` | Analyst model | `gemini-large` |
+| `PROFILE_POLLINATIONS_MODEL` | Analyst model | `gemini` |
 | `FORMATTER_MODEL` | Formatter model | `qwen-coder` |
 | `SUMMARY_PROVIDER` | Summary LLM provider override | *empty* (uses default) |
-| `SUMMARY_MODEL` | Summary model | `gemini-large` |
+| `SUMMARY_MODEL` | Summary model | `gemini` |
 
 ---
 
@@ -232,8 +232,8 @@ flowchart TD
 * [x] **Chat temperature set to 0.8** - `router.ts` default QA route
 * [x] **Analyst temperature set to 0.3** - `profileUpdater.ts` tryChat
 * [x] **Formatter temperature set to 0.0** - `profileUpdater.ts` tryRepairPass
-* [x] **Model: Chat = gemini-large** - `config.ts` POLLINATIONS_MODEL
-* [x] **Model: Analyst = gemini-large** - `config.ts` PROFILE_POLLINATIONS_MODEL
+* [x] **Model: Chat = gemini** - `config.ts` POLLINATIONS_MODEL
+* [x] **Model: Analyst = gemini** - `config.ts` PROFILE_POLLINATIONS_MODEL
 * [x] **Model: Formatter = qwen-coder** - `config.ts` FORMATTER_MODEL
 * [x] **Token budgets doubled** - All context budgets generously increased
 
@@ -265,10 +265,10 @@ flowchart TD
 │ 1. Router Classification │  │ Triggered AFTER reply sent:          │
 │    └─ decideRoute()      │  │                                      │
 │ 2. Expert Queries        │  │ B1. User Profile Update:             │
-│    └─ runExperts()       │  │     ├─ Analyst (gemini-large, 0.3)   │
+│    └─ runExperts()       │  │     ├─ Analyst (gemini, 0.3)         │
 │ 3. Context Loading       │  │     └─ Formatter (qwen-coder, 0.0)   │
 │    └─ buildContext()     │  │                                      │
-│ 4. LLM Generation        │  │     └─ gemini-large, 0.3   │
+│ 4. LLM Generation        │  │     └─ gemini, 0.3         │
 │    └─ gemini, 0.8        │  │     └─ Formatter (qwen-coder, 0.0)   │
 │ 5. Governor Post-proc    │  │     └─ Profile (every 6h)            │
 │ 6. Reply to Discord      │  │                                      │
