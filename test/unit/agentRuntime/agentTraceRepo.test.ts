@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock Prisma - use vi.hoisted to avoid hoisting issues
@@ -73,6 +74,7 @@ describe('AgentTraceRepo', () => {
         data: {
           governorJson: expect.objectContaining({ actions: [] }),
           replyText: 'Final reply text',
+          toolJson: Prisma.JsonNull,
         },
       });
     });

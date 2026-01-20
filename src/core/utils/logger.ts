@@ -20,12 +20,12 @@ export const logger = pino({
     process.env.NODE_ENV === 'test'
       ? undefined
       : {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          ignore: 'pid,hostname',
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            ignore: 'pid,hostname',
+          },
         },
-      },
 });
 
 export const childLogger = (bindings: Record<string, any>) => logger.child(bindings);

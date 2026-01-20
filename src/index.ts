@@ -22,8 +22,6 @@ async function main() {
   registerReadyHandler(client); // D1: Startup backfill & logging
   initChannelSummaryScheduler();
 
-
-
   await client.login(config.DISCORD_TOKEN);
 }
 

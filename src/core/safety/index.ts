@@ -18,4 +18,3 @@ export function isRateLimited(channelId: string): boolean {
   limits.set(channelId, validTimestamps);
   return false;
 }
-

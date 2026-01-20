@@ -170,7 +170,8 @@ export async function summarizeChannelProfile(params: {
     : '(none - new channel)';
   const latestText = formatSummaryAsText(params.latestRollingSummary);
 
-  const windowStart = params.previousSummary?.windowStart ?? params.latestRollingSummary.windowStart;
+  const windowStart =
+    params.previousSummary?.windowStart ?? params.latestRollingSummary.windowStart;
   const windowEnd = params.latestRollingSummary.windowEnd;
 
   const userPrompt = `Previous Profile:

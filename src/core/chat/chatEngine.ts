@@ -69,13 +69,17 @@ export async function generateChatReply(params: {
     previousSummary: profileSummary,
     userMessage: userText,
     assistantReply: replyText,
-  }).then((newSummary) => {
-    if (newSummary && newSummary !== profileSummary) {
-      upsertUserProfile(userId, newSummary).catch((err) =>
-        logger.error({ error: err }, 'Failed to save profile'),
-      );
-    }
-  });
+  })
+    .then((newSummary) => {
+      if (newSummary && newSummary !== profileSummary) {
+        upsertUserProfile(userId, newSummary).catch((err) =>
+          logger.error({ error: err }, 'Failed to save profile'),
+        );
+      }
+    })
+    .catch((err) => {
+      logger.error({ error: err }, 'Profile update failed');
+    });
 
   return { replyText };
 }

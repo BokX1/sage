@@ -1,3 +1,5 @@
+import { VoicePresenceChannel } from './voicePresenceIndex';
+
 export type VoiceChange = {
   guildId: string;
   userId: string;
@@ -18,6 +20,7 @@ export type VoicePresenceIndex = {
     newChannelId: string | null;
     at: Date;
   }) => void;
+  getGuildPresence?: (guildId: string) => VoicePresenceChannel[];
 };
 
 export type VoiceSessionRepo = {
@@ -61,11 +64,10 @@ export async function handleVoiceChange(
   if ((action === 'leave' || action === 'move') && change.oldChannelId) {
     try {
       // Access presence index to get join time
-      const guildPresence = deps.presenceIndex as any;
-      if (guildPresence.getGuildPresence) {
-        const presence = guildPresence.getGuildPresence(change.guildId);
-        const channelPresence = presence.find((c: any) => c.channelId === change.oldChannelId);
-        const userPresence = channelPresence?.members?.find((m: any) => m.userId === change.userId);
+      if (deps.presenceIndex.getGuildPresence) {
+        const presence = deps.presenceIndex.getGuildPresence(change.guildId);
+        const channelPresence = presence.find((c) => c.channelId === change.oldChannelId);
+        const userPresence = channelPresence?.members?.find((m) => m.userId === change.userId);
         userJoinedAt = userPresence?.joinedAt ?? null;
       }
     } catch (error) {

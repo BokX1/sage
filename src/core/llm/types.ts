@@ -5,14 +5,23 @@ export interface LLMChatMessage {
   content: string;
 }
 
+export interface ToolDefinition {
+  type: 'function';
+  function: {
+    name: string;
+    description?: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
 export interface LLMRequest {
   messages: LLMChatMessage[];
   model?: string;
   temperature?: number;
   maxTokens?: number;
   responseFormat?: 'text' | 'json_object';
-  tools?: any[];
-  toolChoice?: string | any;
+  tools?: ToolDefinition[];
+  toolChoice?: string | 'auto' | 'none' | { type: 'function'; function: { name: string } };
 }
 
 export interface LLMResponse {

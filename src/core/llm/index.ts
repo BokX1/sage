@@ -19,10 +19,7 @@ export interface LLMClientOptions {
   pollinationsModel?: string;
 }
 
-export function createLLMClient(
-  provider: LLMProviderName,
-  opts?: LLMClientOptions,
-): LLMClient {
+export function createLLMClient(provider: LLMProviderName, opts?: LLMClientOptions): LLMClient {
   switch (provider) {
     case 'pollinations':
       return new PollinationsClient({

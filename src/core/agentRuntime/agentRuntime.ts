@@ -2,7 +2,7 @@ import { config as appConfig } from '../../config';
 import { getRecentMessages } from '../awareness/channelRingBuffer';
 import { buildTranscriptBlock } from '../awareness/transcriptBuilder';
 import { getLLMClient } from '../llm';
-import { LLMChatMessage } from '../llm/types';
+import { LLMChatMessage, ToolDefinition } from '../llm/types';
 import { isLoggingEnabled } from '../settings/guildChannelSettings';
 import { logger } from '../utils/logger';
 import { buildContextMessages } from './contextBuilder';
@@ -22,7 +22,7 @@ import { ExpertPacket } from '../orchestration/experts/types';
  * Google Search tool definition for OpenAI/Pollinations format.
  * Kept here to match existing chatEngine behavior.
  */
-const GOOGLE_SEARCH_TOOL = {
+const GOOGLE_SEARCH_TOOL: ToolDefinition = {
   type: 'function',
   function: {
     name: 'google_search',
@@ -244,7 +244,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
   const client = getLLMClient();
 
   // Build native search tools if route allows (Pollinations format)
-  const nativeTools: unknown[] = [];
+  const nativeTools: ToolDefinition[] = [];
   if (route.allowTools) {
     nativeTools.push(GOOGLE_SEARCH_TOOL);
   }

@@ -19,7 +19,6 @@ const globalScope = globalThis as any;
 const processedMessages: Map<string, number> = (globalScope[processedMessagesKey] ??= new Map());
 const DEDUP_TTL = 60_000;
 
-
 export async function handleMessageCreate(message: Message) {
   if (message.author.bot) return;
 
@@ -105,10 +104,7 @@ export async function handleMessageCreate(message: Message) {
   // Autopilot Gateway
   // If not explicitly invoked, check if we should engage via Autopilot
   if (!invocation) {
-    if (
-      appConfig.AUTOPILOT_MODE === 'reserved' ||
-      appConfig.AUTOPILOT_MODE === 'talkative'
-    ) {
+    if (appConfig.AUTOPILOT_MODE === 'reserved' || appConfig.AUTOPILOT_MODE === 'talkative') {
       // Create a virtual invocation for autopilot
       invocation = {
         kind: 'autopilot',

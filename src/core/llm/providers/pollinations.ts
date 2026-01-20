@@ -1,4 +1,4 @@
-import { LLMClient, LLMRequest, LLMResponse } from '../types';
+import { LLMClient, LLMRequest, LLMResponse, ToolDefinition, LLMChatMessage } from '../types';
 import { CircuitBreaker } from '../circuitBreaker';
 import { logger } from '../../utils/logger';
 import { metrics } from '../../utils/metrics';
@@ -9,6 +9,16 @@ interface PollinationsConfig {
   apiKey?: string;
   timeoutMs?: number;
   maxRetries?: number;
+}
+
+interface PollinationsPayload {
+  model: string;
+  messages: LLMChatMessage[];
+  temperature: number;
+  max_tokens?: number;
+  response_format?: { type: 'json_object' };
+  tools?: ToolDefinition[];
+  tool_choice?: string | object;
 }
 
 export class PollinationsClient implements LLMClient {
@@ -53,7 +63,7 @@ export class PollinationsClient implements LLMClient {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
 
-    const payload: any = {
+    const payload: PollinationsPayload = {
       model,
       messages: request.messages,
       temperature: request.temperature ?? 0.7,
@@ -85,7 +95,7 @@ export class PollinationsClient implements LLMClient {
       const toolInstruction =
         ' You have access to google_search tool for real-time info/web. Never deny using it.';
 
-      const systemMsg = payload.messages.find((m: any) => m.role === 'system');
+      const systemMsg = payload.messages.find((m) => m.role === 'system');
       if (systemMsg) {
         systemMsg.content += toolInstruction + jsonInstruction;
       } else {
@@ -98,7 +108,7 @@ export class PollinationsClient implements LLMClient {
     metrics.increment('llm_calls_total', { model, provider: 'pollinations' });
 
     let attempt = 0;
-    let lastError: any;
+    let lastError: Error | undefined;
     const maxAttempts = this.config.maxRetries! + 1; // +1 for the first try
     let hasRetriedForJson = false;
 
@@ -138,7 +148,7 @@ export class PollinationsClient implements LLMClient {
             // Strengthen system prompt to ensure JSON output
             const jsonInstruction =
               ' IMPORTANT: You must output strictly valid JSON only. Do not wrap in markdown blocks. No other text.';
-            const systemMsg = payload.messages.find((m: any) => m.role === 'system');
+            const systemMsg = payload.messages.find((m) => m.role === 'system');
 
             // Avoid duplicate instructions
             if (systemMsg) {
@@ -175,7 +185,10 @@ export class PollinationsClient implements LLMClient {
           throw err;
         }
 
-        const data = (await response.json()) as any;
+        const data = (await response.json()) as {
+          choices?: { message?: { content?: string } }[];
+          usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
+        };
         const content = data.choices?.[0]?.message?.content || '';
 
         logger.debug({ usage: data.usage }, '[Pollinations] Success');
@@ -184,25 +197,25 @@ export class PollinationsClient implements LLMClient {
           content,
           usage: data.usage
             ? {
-              promptTokens: data.usage.prompt_tokens,
-              completionTokens: data.usage.completion_tokens,
-              totalTokens: data.usage.total_tokens,
-            }
+                promptTokens: data.usage.prompt_tokens,
+                completionTokens: data.usage.completion_tokens,
+                totalTokens: data.usage.total_tokens,
+              }
             : undefined,
         };
-      } catch (err: any) {
-        lastError = err;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
 
         // If it's the model validation error we threw above, stop retrying
-        if (err.message.includes('Pollinations Model Error')) {
-          throw err;
+        if (lastError.message.includes('Pollinations Model Error')) {
+          throw lastError;
         }
 
         attempt++;
 
         if (attempt < maxAttempts) {
           metrics.increment('llm_failures_total', { model, type: 'retry' });
-          logger.warn({ attempt, error: err.message }, '[Pollinations] Retry');
+          logger.warn({ attempt, error: lastError.message }, '[Pollinations] Retry');
 
           // Simple backoff
           await new Promise((resolve) => setTimeout(resolve, 500 * Math.pow(2, attempt)));

@@ -3,7 +3,7 @@ import { client } from '../client';
 import { logger } from '../../utils/logger';
 import { ingestEvent } from '../../core/ingest/ingestEvent';
 import { isLoggingEnabled } from '../../core/settings/guildChannelSettings';
-import { applyChange } from '../../core/voice/voicePresenceIndex';
+import { applyChange, getGuildPresence } from '../../core/voice/voicePresenceIndex';
 import { startSession, endOpenSession } from '../../core/voice/voiceSessionRepo';
 import { classifyVoiceChange, handleVoiceChange } from '../../core/voice/voiceTracker';
 
@@ -42,7 +42,7 @@ export async function handleVoiceStateUpdate(
     if (action === 'noop') return;
 
     await handleVoiceChange(change, {
-      presenceIndex: { applyChange },
+      presenceIndex: { applyChange, getGuildPresence },
       voiceSessionRepo: { startSession, endOpenSession },
       logger,
     });

@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../db/client';
 
 export interface TraceStartData {
@@ -22,6 +23,9 @@ export interface TraceEndData {
  * Create or update trace start (router + experts execution).
  */
 export async function upsertTraceStart(data: TraceStartData): Promise<void> {
+  const jsonMap = (val: unknown) =>
+    val === undefined ? Prisma.JsonNull : (val as Prisma.InputJsonValue);
+
   await prisma.agentTrace.upsert({
     where: { id: data.id },
     create: {
@@ -30,17 +34,17 @@ export async function upsertTraceStart(data: TraceStartData): Promise<void> {
       channelId: data.channelId,
       userId: data.userId,
       routeKind: data.routeKind,
-      routerJson: data.routerJson as any,
-      expertsJson: data.expertsJson as any,
+      routerJson: jsonMap(data.routerJson),
+      expertsJson: jsonMap(data.expertsJson),
       governorJson: {}, // Placeholder until trace end
-      tokenJson: data.tokenJson as any,
+      tokenJson: jsonMap(data.tokenJson ?? {}),
       replyText: '', // Placeholder until trace end
     },
     update: {
       routeKind: data.routeKind,
-      routerJson: data.routerJson as any,
-      expertsJson: data.expertsJson as any,
-      tokenJson: data.tokenJson as any,
+      routerJson: jsonMap(data.routerJson),
+      expertsJson: jsonMap(data.expertsJson),
+      tokenJson: jsonMap(data.tokenJson ?? {}),
     },
   });
 }
@@ -49,11 +53,14 @@ export async function upsertTraceStart(data: TraceStartData): Promise<void> {
  * Update trace end (governor + tool calls + final reply).
  */
 export async function updateTraceEnd(data: TraceEndData): Promise<void> {
+  const jsonMap = (val: unknown) =>
+    val === undefined ? Prisma.JsonNull : (val as Prisma.InputJsonValue);
+
   await prisma.agentTrace.update({
     where: { id: data.id },
     data: {
-      governorJson: data.governorJson as any,
-      toolJson: data.toolJson as any,
+      governorJson: jsonMap(data.governorJson),
+      toolJson: jsonMap(data.toolJson ?? Prisma.JsonNull),
       replyText: data.replyText,
     },
   });
@@ -78,7 +85,7 @@ export async function listRecentTraces(params: {
 }) {
   const { guildId, channelId, limit } = params;
 
-  const where: any = {};
+  const where: Prisma.AgentTraceWhereInput = {};
   if (guildId) where.guildId = guildId;
   if (channelId) where.channelId = channelId;
 

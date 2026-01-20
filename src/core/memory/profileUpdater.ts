@@ -197,9 +197,7 @@ Output the updated summary:`;
  * - Output: Strict JSON {"summary": "..."}
  * Just wraps the analyst's text in JSON format.
  */
-async function runFormatter(params: {
-  summaryText: string;
-}): Promise<{ summary?: string } | null> {
+async function runFormatter(params: { summaryText: string }): Promise<{ summary?: string } | null> {
   const { summaryText } = params;
   const client = getFormatterClient();
 

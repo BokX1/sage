@@ -26,20 +26,22 @@ export function redact(text: string): string {
   return redacted;
 }
 
-export function redactObj(obj: any): any {
+export function redactObj<T>(obj: T): T {
   if (typeof obj !== 'object' || obj === null) return obj;
 
   if (Array.isArray(obj)) {
-    return obj.map(redactObj);
+    return obj.map(redactObj) as unknown as T;
   }
 
   const newObj: any = {};
   for (const key in obj) {
-    if (SENSITIVE_KEYS.some((k) => key.toLowerCase().includes(k.toLowerCase()))) {
-      newObj[key] = '[REDACTED]';
-    } else {
-      newObj[key] = redactObj(obj[key]);
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      if (SENSITIVE_KEYS.some((k) => key.toLowerCase().includes(k.toLowerCase()))) {
+        newObj[key] = '[REDACTED]';
+      } else {
+        newObj[key] = redactObj((obj as any)[key]);
+      }
     }
   }
-  return newObj;
+  return newObj as T;
 }
