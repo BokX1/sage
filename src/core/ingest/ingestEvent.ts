@@ -61,7 +61,7 @@ const prismaMessageStore = new PrismaMessageStore();
 export async function ingestEvent(event: Event): Promise<void> {
   try {
     // Skip if no guildId (DMs) or logging disabled
-    if (event.guildId && !isLoggingEnabled(event.guildId, event.channelId)) {
+    if (!event.guildId || !isLoggingEnabled(event.guildId, event.channelId)) {
       return;
     }
 

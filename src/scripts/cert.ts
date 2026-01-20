@@ -7,7 +7,7 @@ console.log('🎓 Sage v0.1 Beta - Final Certification Gate\n');
 const steps = [
   { name: 'Lint', cmd: 'npm run lint' },
   { name: 'Build', cmd: 'npm run build' },
-  { name: 'Test', cmd: 'npm test run' }, // 'test run' for single run if using vitest watch default
+  { name: 'Test', cmd: 'npm test' },
   { name: 'Prisma Validate', cmd: 'npx prisma validate' },
   // { name: 'Prisma Migrate Status', cmd: 'npx prisma migrate status' } // Can fail in CI/some envs if no DB, check manually
 ];

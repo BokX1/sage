@@ -2,37 +2,40 @@
 
 [![CI](https://github.com/BokX1/Sage/actions/workflows/ci.yml/badge.svg)](https://github.com/BokX1/Sage/actions/workflows/ci.yml)
 
-**Sage** is a context-aware Discord bot that remembers conversations, tracks relationships, and generates personalized responses using LLM-powered intelligence. Build By BokX1
+**Sage** is a context-aware Discord bot that remembers conversations, tracks relationships, and generates personalized responses using LLM-powered intelligence.
 
 ---
 
-## Features
+## What Sage Does
 
-### 🧠 Intelligent Context
+Sage is built to give Discord communities a reliable, memory-aware assistant. It combines persistent memory, social graph analysis, and channel summaries to produce richer, more personalized replies.
 
-- **User Memory** — Learns and remembers user preferences, interests, and conversation history
-- **Relationship Graph** — Tracks probabilistic relationships between users based on mentions, replies, and voice activity
-- **Channel Summaries** — Automatic rolling summaries of channel conversations with configurable intervals
+### Key Capabilities
 
-### 🎤 Voice Awareness
+- **User Memory** — Learns and recalls preferences, interests, and conversation history.
+- **Relationship Graph** — Builds probabilistic relationships based on mentions, replies, and voice activity.
+- **Channel Summaries** — Maintains rolling summaries to give the model compact context.
+- **Voice Awareness** — Tracks voice joins, leaves, and overlap sessions.
+- **Agentic Routing** — Routes requests through a Mixture-of-Experts architecture with tracing.
 
-- **Voice Presence Tracking** — Monitors who's in voice channels
-- **Overlap Detection** — Tracks which users spend time together in voice
-- **Voice Analytics** — Uses voice data to enhance relationship understanding
+---
 
-### 🤖 Agentic Architecture
+## Repository Structure
 
-- **MoE Orchestration** — Mixture-of-Experts system with specialized modules (memory, social graph, summarizer, voice analytics)
-- **Context Budgeting** — Smart token management to maximize relevant context within LLM limits
-- **Prompt Composition** — Deterministic prompt blocks with style classification
-- **Agent Tracing** — Full observability into routing decisions and expert contributions
-
-### 💬 Chat Features
-
-- **Wake Words** — Responds to configurable wake words (default: "sage", "hey sage")
-- **Rate Limiting** — Configurable per-user rate limits
-- **Cooldowns** — Channel-level cooldowns to prevent spam
-- **Serious Mode** — Toggle for more formal responses
+```
+.
+├── docs/               # Design docs and architecture references
+├── prisma/             # Prisma schema & migrations
+├── src/                # Bot runtime (TypeScript)
+│   ├── bot/            # Discord event handlers
+│   ├── core/           # Runtime pipeline, LLM, orchestration, memory
+│   ├── db/             # Prisma client
+│   ├── scripts/        # Operational scripts (doctor/cert)
+│   └── utils/          # Shared utilities
+├── test/               # Vitest unit/integration tests
+├── README.md
+└── CHANGELOG.md
+```
 
 ---
 
@@ -65,13 +68,13 @@ npm run dev
 |----------|-------------|
 | `DISCORD_TOKEN` | Bot token from Discord Developer Portal |
 | `DISCORD_APP_ID` | Application ID from Discord Developer Portal |
-| `DATABASE_URL` | Postgres or SQLite connection string |
+| `DATABASE_URL` | PostgreSQL connection string |
 
 ### LLM Provider
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `LLM_PROVIDER` | `pollinations` | LLM backend (Pollinations only) |
+| `LLM_PROVIDER` | `pollinations` | LLM backend |
 | `POLLINATIONS_MODEL` | `gemini` | Model name for Pollinations API |
 
 ### Bot Behavior
@@ -80,7 +83,7 @@ npm run dev
 |----------|---------|-------------|
 | `RATE_LIMIT_MAX` | `5` | Max requests per window per user |
 | `RATE_LIMIT_WINDOW_SEC` | `10` | Rate limit window in seconds |
-| `SERIOUS_MODE` | `false` | Disable casual/humor responses |
+| `AUTOPILOT_MODE` | `manual` | `manual`, `reserved`, `talkative` |
 | `WAKE_WORDS` | `sage` | Comma-separated trigger words |
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 
@@ -91,7 +94,7 @@ npm run dev
 | `ADMIN_ROLE_IDS` | Comma-separated Discord role IDs with admin access |
 | `ADMIN_USER_IDS` | Comma-separated Discord user IDs with admin access |
 
-See `.env.example` for the complete list of ~50 configuration options.
+See `.env.example` for the full list of configuration options.
 
 ---
 
@@ -114,7 +117,7 @@ See `.env.example` for the complete list of ~50 configuration options.
 
 ```bash
 npm run dev        # Start with hot reload
-npm run build      # Compile TypeScript
+npm run build      # Compile TypeScript to dist/
 npm run lint       # ESLint
 npm test           # Vitest tests
 npm run doctor     # Config + database check
@@ -131,35 +134,17 @@ npx prisma validate      # Schema validation
 
 ---
 
-## Architecture
+## Testing
 
-```
-Discord Events → Ingest → Context Builder → LLM → Response
-                   ↓
-            ┌──────┴──────┐
-            │   Storage   │
-            ├─────────────┤
-            │ UserProfile │  ← Memory
-            │ Relationships│  ← Social graph
-            │ Summaries   │  ← Channel context
-            │ VoiceSessions│ ← Voice activity
-            │ AgentTraces │  ← Observability
-            └─────────────┘
-```
+- Tests live under `test/` and are run with Vitest.
+- Build output (`dist/`) is excluded from test discovery to avoid CommonJS/Vitest mismatches.
 
-### Core Modules (`src/core/`)
+---
 
-| Module | Purpose |
-|--------|---------|
-| `agentRuntime` | MoE orchestration, context budgeting, prompt composition |
-| `awareness` | Message ring buffer, transcript building |
-| `chat` | Chat engine, response generation |
-| `llm` | Pollinations provider, circuit breaker |
-| `memory` | User profile storage and updates |
-| `orchestration` | Router, governor, expert runners |
-| `relationships` | Relationship graph, edge scoring, admin audit |
-| `summary` | Channel summary scheduler and stores |
-| `voice` | Voice tracking, overlap detection, session repo |
+## Docs
+
+- `docs/architecture/` contains the memory and pipeline design notes.
+- `docs/D9_IMPLEMENTATION.md` covers the MoE orchestration rollout.
 
 ---
 
@@ -167,7 +152,7 @@ Discord Events → Ingest → Context Builder → LLM → Response
 
 - **Runtime**: Node.js + TypeScript
 - **Discord**: discord.js v14
-- **Database**: Prisma ORM (Postgres/SQLite)
+- **Database**: Prisma ORM (PostgreSQL)
 - **LLM**: Pollinations API
 - **Validation**: Zod
 - **Logging**: Pino
@@ -177,4 +162,4 @@ Discord Events → Ingest → Context Builder → LLM → Response
 
 ## License
 
-MIT
+ISC
