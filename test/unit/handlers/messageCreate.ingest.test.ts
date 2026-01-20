@@ -54,6 +54,18 @@ vi.mock('../../../src/core/ingest/ingestEvent', async () => {
   return actual;
 });
 
+// Mock config to use manual autopilot mode (so non-mentions don't trigger AI)
+vi.mock('../../../src/config', async () => {
+  const actual = await vi.importActual<typeof import('../../../src/config')>('../../../src/config');
+  return {
+    ...actual,
+    config: {
+      ...actual.config,
+      AUTOPILOT_MODE: 'manual',
+    },
+  };
+});
+
 import { handleMessageCreate } from '../../../src/bot/handlers/messageCreate';
 import { resetInvocationCooldowns } from '../../../src/core/invoke/cooldown';
 import { logger } from '../../../src/utils/logger';
@@ -80,17 +92,23 @@ describe('messageCreate - Ingest Flow', () => {
       author: {
         id: 'user-456',
         bot: false,
+        username: 'TestUser',
       } as User,
+      member: {
+        displayName: 'TestUser',
+      },
       guildId: 'guild-789',
       channelId: 'channel-101',
       createdAt: new Date(),
       mentions: {
         has: vi.fn(() => false),
+        users: new Map(),
       },
       reference: null,
       fetchReference: vi.fn(),
       channel: {
         send: vi.fn(),
+        sendTyping: vi.fn().mockResolvedValue(undefined),
       } as unknown as TextChannel,
       ...overrides,
     } as unknown as Message;

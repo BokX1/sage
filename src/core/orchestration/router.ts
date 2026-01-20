@@ -18,7 +18,7 @@ export interface RouteDecision {
 
 export interface DecideRouteParams {
   userText: string;
-  invokedBy: 'mention' | 'reply' | 'wakeword' | 'command';
+  invokedBy: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
   hasGuild: boolean;
 }
 
@@ -33,7 +33,9 @@ export function decideRoute(params: DecideRouteParams): RouteDecision {
   // Route: Summarize
   if (
     /\b(summarize|recap|tldr|sum up|summary)\b/i.test(normalized) ||
-    /what (are|were) (they|you all|people|we) (talking|discussing) about/i.test(normalized)
+    /\b(catch|caught).*(up|me)\b/i.test(normalized) ||
+    /what (are|were) (they|you all|people|we) (talking|discussing|doing) about/i.test(normalized) ||
+    /what happened (today|recently)/i.test(normalized)
   ) {
     return {
       kind: 'summarize',
@@ -49,6 +51,9 @@ export function decideRoute(params: DecideRouteParams): RouteDecision {
     /\b(who'?s? in voice|who in voice|in vc|voice channel)\b/i.test(normalized) ||
     /\bhow long.*voice (today|this session)\b/i.test(normalized) ||
     /\b(voice|vc) time (today|this week)\b/i.test(normalized) ||
+    /\b(voice|vc) status\b/i.test(normalized) ||
+    /\b(anyone|who is|who's) (online|active|in chat)\b/i.test(normalized) ||
+    /\bcheck (vc|voice)\b/i.test(normalized) ||
     /\bjoined voice\b/i.test(normalized)
   ) {
     return {
@@ -64,7 +69,8 @@ export function decideRoute(params: DecideRouteParams): RouteDecision {
   if (
     /\b(who'?s? working with|relationship|closest to|whoiswho)\b/i.test(normalized) ||
     /\b(social graph|connections|network)\b/i.test(normalized) ||
-    /\bwho (knows|talks to|works with)\b/i.test(normalized)
+    /\b(my|our) (circle|clique|friends)\b/i.test(normalized) ||
+    /\bwho (knows|talks to|works with|hangs out with)\b/i.test(normalized)
   ) {
     return {
       kind: 'social_graph',
@@ -78,6 +84,7 @@ export function decideRoute(params: DecideRouteParams): RouteDecision {
   // Route: Memory
   if (
     /\b(remember|do i like|my preference|what do you know about me)\b/i.test(normalized) ||
+    /\b(my|user) (profile|info|stats)\b/i.test(normalized) ||
     /\bwhat (have you learned|do you remember) about me\b/i.test(normalized)
   ) {
     return {
@@ -92,7 +99,7 @@ export function decideRoute(params: DecideRouteParams): RouteDecision {
   // Route: Admin
   if (
     (invokedBy === 'command' && hasGuild) ||
-    /\b(admin|configure|settings|manage)\b/i.test(normalized)
+    /\b(admin|configure|settings|manage|config)\b/i.test(normalized)
   ) {
     return {
       kind: 'admin',

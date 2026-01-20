@@ -2,7 +2,7 @@ import { Message, Events, TextChannel } from 'discord.js';
 import { client } from '../client';
 import { logger } from '../../utils/logger';
 import { generateTraceId } from '../../utils/trace';
-import { isRateLimited, isSeriousMode } from '../../core/safety';
+import { isRateLimited } from '../../core/safety';
 import { generateChatReply } from '../../core/chat/chatEngine';
 import { ingestEvent } from '../../core/ingest/ingestEvent';
 import { config as appConfig } from '../../config';
@@ -19,13 +19,17 @@ const globalScope = globalThis as any;
 const processedMessages: Map<string, number> = (globalScope[processedMessagesKey] ??= new Map());
 const DEDUP_TTL = 60_000;
 
+
 export async function handleMessageCreate(message: Message) {
   if (message.author.bot) return;
 
   // Deduplicate messages (prevent double processing)
   const now = Date.now();
+  // Debug log for every message
+  logger.debug({ msgId: message.id, author: message.author.username }, 'Processing message event');
+
   if (processedMessages.has(message.id)) {
-    logger.debug({ msgId: message.id }, 'Ignoring duplicate message event');
+    logger.debug({ msgId: message.id }, 'Ignoring duplicate message event (Dedupe hit)');
     return;
   }
   processedMessages.set(message.id, now);
@@ -78,7 +82,7 @@ export async function handleMessageCreate(message: Message) {
     .map((prefix) => prefix.trim())
     .filter(Boolean);
 
-  const invocation = detectInvocation({
+  let invocation = detectInvocation({
     rawContent: message.content,
     isMentioned,
     isReplyToBot,
@@ -87,9 +91,8 @@ export async function handleMessageCreate(message: Message) {
     prefixes: wakeWordPrefixes,
   });
 
-  if (!invocation) return;
-
   if (
+    invocation &&
     !shouldAllowInvocation({
       channelId: message.channelId,
       userId: message.author.id,
@@ -99,23 +102,44 @@ export async function handleMessageCreate(message: Message) {
     return;
   }
 
+  // Autopilot Gateway
+  // If not explicitly invoked, check if we should engage via Autopilot
+  if (!invocation) {
+    if (
+      appConfig.AUTOPILOT_MODE === 'reserved' ||
+      appConfig.AUTOPILOT_MODE === 'talkative'
+    ) {
+      // Create a virtual invocation for autopilot
+      invocation = {
+        kind: 'autopilot',
+        cleanedText: message.content,
+        intent: 'autopilot',
+      };
+    } else {
+      // No manual invocation AND no autopilot -> Ignore
+      return;
+    }
+  }
+
+  // Double-check: If we have an invocation now (manual or autopilot), print it
+  if (invocation) {
+    logger.debug({ type: invocation.kind, intent: invocation.intent }, 'Invocation decided');
+  }
+
   const traceId = generateTraceId();
   const loggerWithTrace = logger.child({ traceId });
 
-  // Rate limit gate
+  // Rate limit gate (apply to everything including autopilot)
   if (isRateLimited(message.channelId)) {
     loggerWithTrace.warn('Rate limit hit');
     return;
   }
 
-  // Serious mode gate
-  if (isSeriousMode()) {
-    loggerWithTrace.info('Serious mode: ignoring message');
-    return;
-  }
-
   try {
     loggerWithTrace.info({ msg: 'Message received', text: invocation.cleanedText });
+
+    // Send typing indicator
+    await (message.channel as TextChannel).sendTyping();
 
     // Generate Chat Reply
     const result = await generateChatReply({
@@ -131,25 +155,20 @@ export async function handleMessageCreate(message: Message) {
           : null,
       intent: invocation.intent,
       mentionedUserIds: mentionedUserIdsForQueries,
+      invokedBy: invocation.kind,
     });
 
     // Send messages to Discord
-    const channel = message.channel as TextChannel;
+    const discordChannel = message.channel as TextChannel;
     if (result.replyText) {
-      // Simple split if too long (Discord limit 2000), but prompt says "treat as one reply"
-      // We'll let Discord.js handle split if we pass dispatch or just helper.
-      // But simple send works for < 2000.
-      // If > 2000, we might need to chunk.
-      // ChatEngine returned a single string.
-
       if (result.replyText.length > 2000) {
         // simple chunking
         const chunks = result.replyText.match(/.{1,2000}/g) || [];
         for (const chunk of chunks) {
-          await channel.send(chunk);
+          await discordChannel.send(chunk);
         }
       } else {
-        await channel.send(result.replyText);
+        await discordChannel.send(result.replyText);
       }
     }
 
@@ -170,11 +189,14 @@ export async function handleMessageCreate(message: Message) {
 export function registerMessageCreateHandler() {
   const g = globalThis as any;
   if (g[registrationKey]) {
+    logger.warn('MessageCreate handler ALREADY registered (Skip)');
     return;
   }
   g[registrationKey] = true;
 
-  client.on(Events.MessageCreate, handleMessageCreate);
+  client.on(Events.MessageCreate, (msg) => {
+    handleMessageCreate(msg);
+  });
   logger.info(
     { count: client.listenerCount(Events.MessageCreate) },
     'MessageCreate handler registered',

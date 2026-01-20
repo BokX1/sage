@@ -19,11 +19,3 @@ export function isRateLimited(channelId: string): boolean {
   return false;
 }
 
-export function isSeriousMode(): boolean {
-  return config.seriousMode === 'true';
-}
-
-export const autopilot = {
-  level: config.autopilotLevel || 'cautious',
-  silenceGraceSec: Number(config.silenceGraceSec || 60),
-};

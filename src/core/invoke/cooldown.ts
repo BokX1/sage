@@ -6,7 +6,7 @@ const channelWakewordHistory = new Map<string, number[]>();
 export function shouldAllowInvocation(params: {
   channelId: string;
   userId: string;
-  kind: 'mention' | 'reply' | 'wakeword';
+  kind: 'mention' | 'reply' | 'wakeword' | 'autopilot';
 }): boolean {
   const { channelId, userId, kind } = params;
   if (kind !== 'wakeword') {

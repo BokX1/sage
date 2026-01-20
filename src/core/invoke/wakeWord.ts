@@ -1,7 +1,7 @@
 export type Invocation = {
-  kind: 'mention' | 'reply' | 'wakeword';
+  kind: 'mention' | 'reply' | 'wakeword' | 'autopilot';
   cleanedText: string;
-  intent: 'summarize' | 'qa' | 'action' | 'admin' | 'unknown';
+  intent: 'summarize' | 'qa' | 'action' | 'admin' | 'autopilot' | 'unknown';
 };
 
 export type DetectInvocationParams = {

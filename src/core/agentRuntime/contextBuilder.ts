@@ -25,6 +25,8 @@ export interface BuildContextMessagesParams {
   style?: StyleProfile;
   /** Expert packets from MoE orchestration (D9) */
   expertPackets?: string | null;
+  /** Invocation method to determine system prompt behavior */
+  invokedBy?: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
 
   // ================================================================
   // TODO (D2/D4): Future context expansion points
@@ -50,13 +52,38 @@ export function buildContextMessages(params: BuildContextMessagesParams): LLMCha
     relationshipHints,
     style,
     expertPackets,
+    invokedBy,
   } = params;
+
+  // Autopilot Mode System Prompt Injection
+  let autopilotInstruction = '';
+  if (invokedBy === 'autopilot') {
+    if (config.autopilotMode === 'reserved') {
+      autopilotInstruction = `
+## AUTOPILOT MODE: RESERVED
+You are currently in RESERVED Autopilot Mode.
+STRICTLY remain silent and output [SILENCE] unless:
+1. The user explicitly asks for help (even without mentioning you).
+2. You have been previously instructed to help a specific user.
+3. You can provide a critical fact check or correction.
+4. The conversation is stuck and needs a nudge.
+
+Do NOT answer general chatter or greetings in this mode.
+Output '[SILENCE]' (without quotes) to remain silent.`;
+    } else if (config.autopilotMode === 'talkative') {
+      autopilotInstruction = `
+## AUTOPILOT MODE: TALKATIVE
+You are currently in TALKATIVE Autopilot Mode.
+Feel free to join the conversation if you have something interesting, funny, or helpful to add.
+If you have nothing to add, output '[SILENCE]' (without quotes).`;
+    }
+  }
 
   const blocks: ContextBlock[] = [
     {
       id: 'base_system',
       role: 'system',
-      content: composeSystemPrompt({ style }),
+      content: composeSystemPrompt({ style }) + autopilotInstruction,
       priority: 100,
       truncatable: false,
     },

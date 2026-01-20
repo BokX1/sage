@@ -22,6 +22,7 @@ export async function generateChatReply(params: {
   replyToBotText?: string | null;
   intent?: string | null;
   mentionedUserIds?: string[];
+  invokedBy?: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
 }): Promise<{ replyText: string }> {
   const {
     traceId,
@@ -33,10 +34,16 @@ export async function generateChatReply(params: {
     replyToBotText,
     intent,
     mentionedUserIds,
+    invokedBy = 'mention',
   } = params;
 
   // 1. Load Profile
-  const profileSummary = await getUserProfile(userId);
+  let profileSummary: string | null = null;
+  try {
+    profileSummary = await getUserProfile(userId);
+  } catch (err) {
+    logger.warn({ error: err, userId }, 'Failed to load user profile (non-fatal)');
+  }
 
   logger.debug({ userId, profileSummary: profileSummary || 'None' }, 'Memory Context');
 
@@ -52,6 +59,7 @@ export async function generateChatReply(params: {
     replyToBotText: replyToBotText ?? null,
     intent: intent ?? null,
     mentionedUserIds,
+    invokedBy,
   });
 
   const replyText = result.replyText;

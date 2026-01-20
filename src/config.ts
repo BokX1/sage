@@ -21,12 +21,7 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   RATE_LIMIT_MAX: z.coerce.number().default(5),
   RATE_LIMIT_WINDOW_SEC: z.coerce.number().default(10),
-  SERIOUS_MODE: z
-    .enum(['true', 'false'])
-    .transform((v) => v === 'true')
-    .default('false'),
-  AUTOPILOT_LEVEL: z.enum(['manual', 'cautious', 'full']).default('cautious'),
-  SILENCE_GRACE_SEC: z.coerce.number().default(60),
+  AUTOPILOT_MODE: z.enum(['manual', 'reserved', 'talkative']).default('manual'),
   WAKE_WORDS: z.string().default('sage'),
   WAKE_WORD_PREFIXES: z.string().default('hey,yo,hi,hello'),
   WAKEWORD_COOLDOWN_SEC: z.coerce.number().default(20),

@@ -16,6 +16,7 @@ import { decideRoute } from '../orchestration/router';
 import { runExperts } from '../orchestration/runExperts';
 import { governOutput } from '../orchestration/governor';
 import { upsertTraceStart, updateTraceEnd } from '../trace/agentTraceRepo';
+import { ExpertPacket } from '../orchestration/experts/types';
 
 /**
  * Google Search tool definition for OpenAI/Pollinations format.
@@ -55,7 +56,7 @@ export interface RunChatTurnParams {
   intent?: string | null;
   mentionedUserIds?: string[];
   /** Invocation method for router */
-  invokedBy?: 'mention' | 'reply' | 'wakeword' | 'command';
+  invokedBy?: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
 }
 
 export interface RunChatTurnResult {
@@ -128,14 +129,20 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
   logger.debug({ traceId, route }, 'Router decision');
 
   // D9: Step 2 - Run experts (cheap DB queries)
-  const expertPackets = await runExperts({
-    experts: route.experts,
-    guildId,
-    channelId,
-    userId,
-    traceId,
-    skipMemory: !!userProfileSummary,
-  });
+  // D9: Step 2 - Run experts (cheap DB queries)
+  let expertPackets: ExpertPacket[] = [];
+  try {
+    expertPackets = await runExperts({
+      experts: route.experts,
+      guildId,
+      channelId,
+      userId,
+      traceId,
+      skipMemory: !!userProfileSummary,
+    });
+  } catch (err) {
+    logger.warn({ error: err, traceId }, 'Failed to run experts (non-fatal)');
+  }
 
   const expertPacketsText = expertPackets.map((p) => `[${p.name}] ${p.content}`).join('\n\n');
 
@@ -225,6 +232,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
     relationshipHints: relationshipHintsText,
     style,
     expertPackets: expertPacketsText || null,
+    invokedBy,
   });
 
   logger.debug(
@@ -308,6 +316,15 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
   }
 
   logger.debug({ traceId, governorActions: governorResult.actions }, 'Chat turn complete');
+
+  // Check for Silence Protocol
+  if (governorResult.finalText.trim().includes('[SILENCE]')) {
+    logger.info({ traceId }, 'Agent chose silence');
+    return {
+      replyText: '',
+      debug: { messages, toolsExecuted },
+    };
+  }
 
   return {
     replyText: governorResult.finalText,
