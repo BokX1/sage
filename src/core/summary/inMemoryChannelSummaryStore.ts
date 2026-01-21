@@ -19,6 +19,9 @@ export class InMemoryChannelSummaryStore implements ChannelSummaryStore {
     topics?: string[];
     threads?: string[];
     unresolved?: string[];
+    decisions?: string[];
+    actionItems?: string[];
+    sentiment?: string;
     glossary?: Record<string, string>;
   }): Promise<void> {
     const now = new Date();
@@ -32,6 +35,9 @@ export class InMemoryChannelSummaryStore implements ChannelSummaryStore {
       topics: params.topics,
       threads: params.threads,
       unresolved: params.unresolved,
+      decisions: params.decisions,
+      actionItems: params.actionItems,
+      sentiment: params.sentiment,
       glossary: params.glossary,
       updatedAt: now,
     };

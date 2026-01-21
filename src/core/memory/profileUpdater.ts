@@ -3,12 +3,11 @@ import { config } from '../config/env';
 import { config as appConfig } from '../../config';
 import { logger } from '../utils/logger';
 import { LLMClient, LLMRequest, LLMProviderName } from '../llm/types';
+import { limitConcurrency } from '../utils/concurrency';
 
-/**
- * ANALYST SYSTEM PROMPT
- * The analyst does the hard work: reads previous summary + new interaction,
- * then outputs the UPDATED SUMMARY TEXT directly.
- * If nothing new was learned, it outputs the previous summary unchanged.
+// Limit global profile updates to 2 concurrent operations
+const profileUpdateLimit = limitConcurrency(2);
+
 /**
  * ANALYST SYSTEM PROMPT
  * The analyst does the hard work: reads previous summary + new interaction,
@@ -26,13 +25,16 @@ Core Instructions:
 2. **Merge & Evolve**: Integrate new insights with the existing profile. Refine outdated beliefs.
 3. **Be Concise but Nuanced**: Use dense, descriptive language. Capture the "vibe" of the user.
 
+Analysis Dimensions:
+- **Psychological**: Values, motivations, hidden drivers.
+- **Interaction Style**: Patience, humor, detail-orientation, tone.
+- **Technical Context**: Projects, languages, preferred tools/frameworks.
+- **Relationships**: Dynamics with other users or the bot.
+
 Rules:
 - PRESERVE existing stable facts unless contradicted.
-- IGNORE transient small talk (hellos, simple thanks) unless it reveals personality.
-- CAPTURE:
-  - **Hard Facts**: Location, job, tech stack, specific interests.
-  - **Soft Traits**: Tone (formal/casual), patience level, humor style.
-  - **Context**: Recent major topics or projects.
+- IGNORE transient emotional outbursts unless they form a pattern.
+- CAPTURE specific preferences and "tribal knowledge".
 - NO PII/SECRETS: Do not store phone numbers, keys, or passwords.
 - **Output the FULL merged profile text** (do NOT output just the changes).`;
 
@@ -48,7 +50,7 @@ Output: {"summary": "<the text>"}
 Do NOT modify, summarize, or extract from the text.
 Just put the exact text inside the JSON summary field.`;
 
-// Cached analyst client (uses gemini)
+// Cached analyst client
 let analystClientCache: { client: LLMClient; provider: LLMProviderName } | null = null;
 
 // Cached formatter client (uses qwen-coder)
@@ -57,7 +59,7 @@ let formatterClientCache: LLMClient | null = null;
 /**
  * Get the LLM client for the Analyst phase.
  * Uses PROFILE_PROVIDER and PROFILE_POLLINATIONS_MODEL overrides if configured.
- * Default: gemini with temperature 0.3
+ * Default: Configured model (default: deepseek) with temperature 0.3
  */
 function getAnalystClient(): { client: LLMClient; provider: LLMProviderName } {
   if (analystClientCache) {
@@ -77,7 +79,7 @@ function getAnalystClient(): { client: LLMClient; provider: LLMProviderName } {
 
   logger.debug(
     { provider, model: profilePollinationsModel },
-    'Analyst client initialized (gemini)',
+    'Analyst client initialized',
   );
 
   return analystClientCache;
@@ -102,7 +104,7 @@ function getFormatterClient(): LLMClient {
 
 /**
  * Two-step profile update pipeline:
- * 1. ANALYST (gemini, temp=0.3): Analyze the interaction freely (no JSON constraint)
+ * 1. ANALYST (deepseek, temp=0.3): Analyze the interaction freely (no JSON constraint)
  * 2. FORMATTER (qwen-coder, temp=0.0): Convert analysis to strict JSON
  */
 export async function updateProfileSummary(params: {
@@ -114,35 +116,41 @@ export async function updateProfileSummary(params: {
 
   try {
     // ========================================
-    // STEP 1: ANALYST (Outputs Updated Summary)
+    // CONCURRENCY CONTROL
     // ========================================
-    const updatedSummaryText = await runAnalyst({
-      previousSummary,
-      userMessage,
-      assistantReply,
-    });
+    return profileUpdateLimit(async () => {
+      // ========================================
+      // STEP 1: ANALYST (Outputs Updated Summary)
+      // ========================================
+      const updatedSummaryText = await runAnalyst({
+        previousSummary,
+        userMessage,
+        assistantReply,
+      });
 
-    if (!updatedSummaryText) {
-      logger.warn('Profile Update: Analyst returned empty response');
+      if (!updatedSummaryText) {
+        logger.warn('Profile Update: Analyst returned empty response');
+        return previousSummary; // Preserve existing on failure
+      }
+
+      logger.debug({ updatedSummaryText }, 'Analyst output');
+
+      // ========================================
+      // STEP 2: FORMATTER (Wrap in JSON)
+      // ========================================
+      const json = await runFormatter({
+        summaryText: updatedSummaryText,
+      });
+
+      if (json && typeof json.summary === 'string') {
+        // Log success but be nuanced - the update might be stale if high concurrency
+        logger.info('Profile Update: Two-step pipeline succeeded');
+        return json.summary;
+      }
+
+      logger.warn('Profile Update: Formatter did not return valid summary');
       return previousSummary; // Preserve existing on failure
-    }
-
-    logger.debug({ updatedSummaryText }, 'Analyst output');
-
-    // ========================================
-    // STEP 2: FORMATTER (Wrap in JSON)
-    // ========================================
-    const json = await runFormatter({
-      summaryText: updatedSummaryText,
     });
-
-    if (json && typeof json.summary === 'string') {
-      logger.info('Profile Update: Two-step pipeline succeeded');
-      return json.summary;
-    }
-
-    logger.warn('Profile Update: Formatter did not return valid summary');
-    return previousSummary; // Preserve existing on failure
   } catch (error) {
     logger.error({ error }, 'Error in profile update pipeline');
     return null;
@@ -151,7 +159,7 @@ export async function updateProfileSummary(params: {
 
 /**
  * STEP 1: Run the Analyst
- * - Model: gemini
+ * - Model: deepseek
  * - Temperature: 0.3 (creative but focused)
  * - Output: Free-form text analysis (NO JSON constraint)
  */

@@ -27,8 +27,7 @@ export async function runConfigDoctor() {
     },
     {
       name: 'Pollinations Model',
-      valid: true,
-      value: config.pollinationsModel || 'deepseek (default)',
+      value: config.pollinationsModel || 'gemini (default)',
     },
     {
       name: 'Pollinations API Key',

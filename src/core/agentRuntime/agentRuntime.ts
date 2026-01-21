@@ -1,4 +1,5 @@
 import { config as appConfig } from '../../config';
+import { formatSummaryAsText } from '../summary/summarizeChannelWindow';
 import { getRecentMessages } from '../awareness/channelRingBuffer';
 import { buildTranscriptBlock } from '../awareness/transcriptBuilder';
 import { getLLMClient } from '../llm';
@@ -193,12 +194,29 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
         }),
       ]);
 
+
       if (rollingSummary) {
-        rollingSummaryText = `Channel rolling summary (last ${appConfig.SUMMARY_ROLLING_WINDOW_MIN}m): ${rollingSummary.summaryText}`;
+        rollingSummaryText = `Channel rolling summary (last ${appConfig.SUMMARY_ROLLING_WINDOW_MIN}m):\n${formatSummaryAsText({
+          ...rollingSummary,
+          topics: rollingSummary.topics ?? [],
+          threads: rollingSummary.threads ?? [],
+          unresolved: rollingSummary.unresolved ?? [],
+          decisions: rollingSummary.decisions ?? [],
+          actionItems: rollingSummary.actionItems ?? [],
+          glossary: rollingSummary.glossary ?? {},
+        })}`;
       }
 
       if (profileSummary) {
-        profileSummaryText = `Channel profile (long-term): ${profileSummary.summaryText}`;
+        profileSummaryText = `Channel profile (long-term):\n${formatSummaryAsText({
+          ...profileSummary,
+          topics: profileSummary.topics ?? [],
+          threads: profileSummary.threads ?? [],
+          unresolved: profileSummary.unresolved ?? [],
+          decisions: profileSummary.decisions ?? [],
+          actionItems: profileSummary.actionItems ?? [],
+          glossary: profileSummary.glossary ?? {},
+        })}`;
       }
     } catch (error) {
       logger.warn({ error, guildId, channelId }, 'Failed to load channel summaries (non-fatal)');

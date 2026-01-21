@@ -11,6 +11,9 @@ export interface ChannelSummary {
   topics?: string[];
   threads?: string[];
   unresolved?: string[];
+  decisions?: string[];
+  actionItems?: string[];
+  sentiment?: string;
   glossary?: Record<string, string>;
   updatedAt?: Date;
 }
@@ -26,6 +29,9 @@ export interface ChannelSummaryStore {
     topics?: string[];
     threads?: string[];
     unresolved?: string[];
+    decisions?: string[];
+    actionItems?: string[];
+    sentiment?: string;
     glossary?: Record<string, string>;
   }): Promise<void>;
   getLatestSummary(params: {

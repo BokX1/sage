@@ -146,6 +146,9 @@ export class ChannelSummaryScheduler {
       topics: rollingSummary.topics,
       threads: rollingSummary.threads,
       unresolved: rollingSummary.unresolved,
+      decisions: rollingSummary.decisions,
+      actionItems: rollingSummary.actionItems,
+      sentiment: rollingSummary.sentiment,
       glossary: rollingSummary.glossary,
     });
 
@@ -192,6 +195,9 @@ export class ChannelSummaryScheduler {
       topics: rollingSummary.topics,
       threads: rollingSummary.threads,
       unresolved: rollingSummary.unresolved,
+      decisions: rollingSummary.decisions,
+      actionItems: rollingSummary.actionItems,
+      sentiment: rollingSummary.sentiment,
       glossary: rollingSummary.glossary,
     });
 
@@ -237,14 +243,17 @@ export class ChannelSummaryScheduler {
     const profileSummary = await this.summarizeProfile({
       previousSummary: lastProfile
         ? {
-            windowStart: lastProfile.windowStart,
-            windowEnd: lastProfile.windowEnd,
-            summaryText: lastProfile.summaryText,
-            topics: lastProfile.topics ?? [],
-            threads: lastProfile.threads ?? [],
-            unresolved: lastProfile.unresolved ?? [],
-            glossary: lastProfile.glossary ?? {},
-          }
+          windowStart: lastProfile.windowStart,
+          windowEnd: lastProfile.windowEnd,
+          summaryText: lastProfile.summaryText,
+          topics: lastProfile.topics ?? [],
+          threads: lastProfile.threads ?? [],
+          unresolved: lastProfile.unresolved ?? [],
+          decisions: lastProfile.decisions ?? [],
+          actionItems: lastProfile.actionItems ?? [],
+          sentiment: lastProfile.sentiment,
+          glossary: lastProfile.glossary ?? {},
+        }
         : null,
       latestRollingSummary: rollingSummary,
     });
@@ -259,6 +268,9 @@ export class ChannelSummaryScheduler {
       topics: profileSummary.topics,
       threads: profileSummary.threads,
       unresolved: profileSummary.unresolved,
+      decisions: profileSummary.decisions,
+      actionItems: profileSummary.actionItems,
+      sentiment: profileSummary.sentiment,
       glossary: profileSummary.glossary,
     });
   }

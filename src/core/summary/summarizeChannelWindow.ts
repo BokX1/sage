@@ -14,6 +14,9 @@ export interface StructuredSummary {
   topics: string[];
   threads: string[];
   unresolved: string[];
+  decisions: string[];
+  actionItems: string[];
+  sentiment?: string;
   glossary: Record<string, string>;
 }
 
@@ -32,23 +35,34 @@ Input: Recent messages
 Output: A structured summary
 
 Instructions:
-1. Analyze the conversation.
-2. Output your analysis in the following STRICT format:
+1. Analyze the conversation narrative.
+2. Extract concrete decisions and action items.
+3. Gauge the overall sentiment.
+4. Output your analysis in the following STRICT format:
 
 SUMMARY:
-<Write a narrative summary of what happened, who said what, and the vibe>
+<A detailed story of the conversation flow, who said what, and key outcomes>
 
 TOPICS:
-<Comma-separated list of main topics>
+<Comma-separated list of main topics with urgency if applicable>
 
 THREADS:
-<Comma-separated list of ongoing conversation threads>
+<Comma-separated list of ongoing conversational threads>
+
+DECISIONS:
+<List of agreed-upon decisions or conclusions>
+
+ACTION ITEMS:
+<List of tasks/actions, who is responsible, and deadlines if any>
+
+SENTIMENT:
+<Overall mood: e.g., Productive, Tense, Casual, Chaotic>
 
 UNRESOLVED:
-<Comma-separated list of any open questions or issues>
+<Comma-separated list of open questions or issues>
 
 GLOSSARY:
-<Key: Value list of any specific terms, project names, or definitions mentioned>
+<Key: Value list of specific terms, project names, or definitions>
 `;
 
 /**
@@ -63,7 +77,8 @@ Output: The FULL Updated Channel Profile
 
 Instructions:
 1. Merge the new information into the existing history.
-2. Output the FULL profile in the following STRICT format:
+2. Track long-term decisions and recurring action patterns.
+3. Output the FULL profile in the following STRICT format:
 
 SUMMARY:
 <The comprehensive description of the channel's life, purpose, and culture>
@@ -73,6 +88,15 @@ TOPICS:
 
 THREADS:
 <Comma-separated list of active long-running threads>
+
+DECISIONS:
+<List of major historical decisions that are still relevant>
+
+ACTION ITEMS:
+<List of long-term projects or pending large-scale actions>
+
+SENTIMENT:
+<Typical or prevailing mood of the channel>
 
 UNRESOLVED:
 <Comma-separated list of long-term open questions>
@@ -94,6 +118,9 @@ Output is valid JSON only.
   "summaryText": "<content of SUMMARY section>",
   "topics": ["<item 1>", "<item 2>"],
   "threads": ["<item 1>", "<item 2>"],
+  "decisions": ["<item 1>", "<item 2>"],
+  "actionItems": ["<item 1>", "<item 2>"],
+  "sentiment": "<sentiment text>",
   "unresolved": ["<item 1>", "<item 2>"],
   "glossary": {"<term>": "<def>"}
 }
@@ -296,7 +323,7 @@ async function retryFormatter(
 
 ${analysisText}
 
-Output: {"summaryText": "...", "topics": [], "threads": [], "unresolved": [], "glossary": {}}`;
+Output: {"summaryText": "...", "topics": [], "threads": [], "decisions": [], "actionItems": [], "sentiment": "...", "unresolved": [], "glossary": {}}`;
 
   const payload: LLMRequest = {
     messages: [
@@ -355,9 +382,18 @@ function buildMessageLines(messages: ChannelMessage[]): string {
   return lines.join('\n');
 }
 
-function formatSummaryAsText(summary: StructuredSummary): string {
+export function formatSummaryAsText(summary: StructuredSummary): string {
   const parts: string[] = [summary.summaryText];
 
+  if (summary.sentiment) {
+    parts.push(`Sentiment: ${summary.sentiment}`);
+  }
+  if (summary.decisions.length > 0) {
+    parts.push(`Decisions:\n- ${summary.decisions.join('\n- ')}`);
+  }
+  if (summary.actionItems.length > 0) {
+    parts.push(`Action Items:\n- ${summary.actionItems.join('\n- ')}`);
+  }
   if (summary.topics.length > 0) {
     parts.push(`Topics: ${summary.topics.join(', ')}`);
   }
@@ -374,7 +410,7 @@ function formatSummaryAsText(summary: StructuredSummary): string {
     parts.push(`Glossary: ${glossaryStr}`);
   }
 
-  return parts.join('\n');
+  return parts.join('\n\n');
 }
 
 export function cleanJsonOutput(content: string): string {
@@ -406,6 +442,9 @@ function normalizeSummary(
     summaryText,
     topics: normalizeStringArray(json.topics),
     threads: normalizeStringArray(json.threads),
+    decisions: normalizeStringArray(json.decisions),
+    actionItems: normalizeStringArray(json.actionItems),
+    sentiment: typeof json.sentiment === 'string' ? json.sentiment.trim() : undefined,
     unresolved: normalizeStringArray(json.unresolved),
     glossary: normalizeGlossary(json.glossary),
   };
@@ -448,5 +487,8 @@ function fallbackSummary(prompt: string, windowStart: Date, windowEnd: Date): St
     threads: [],
     unresolved: [],
     glossary: {},
+    decisions: [],
+    actionItems: [],
+    sentiment: 'Unknown',
   };
 }

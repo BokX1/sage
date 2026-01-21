@@ -25,9 +25,14 @@ export class PrismaChannelSummaryStore implements ChannelSummaryStore {
     topics?: string[];
     threads?: string[];
     unresolved?: string[];
+    decisions?: string[];
+    actionItems?: string[];
+    sentiment?: string;
     glossary?: Record<string, string>;
   }): Promise<void> {
+    console.log('PrismaChannelSummaryStore.upsertSummary called');
     const channelSummary = getChannelSummaryClient();
+    console.log('Client available:', !!channelSummary, 'Upsert fn:', !!channelSummary?.upsert);
     await channelSummary.upsert({
       where: {
         guildId_channelId_kind: {
@@ -47,6 +52,9 @@ export class PrismaChannelSummaryStore implements ChannelSummaryStore {
         threadsJson: params.threads ?? null,
         unresolvedJson: params.unresolved ?? null,
         glossaryJson: params.glossary ?? null,
+        decisionsJson: params.decisions ?? null,
+        actionItemsJson: params.actionItems ?? null,
+        sentiment: params.sentiment ?? null,
       },
       update: {
         windowStart: params.windowStart,
@@ -56,6 +64,9 @@ export class PrismaChannelSummaryStore implements ChannelSummaryStore {
         threadsJson: params.threads ?? null,
         unresolvedJson: params.unresolved ?? null,
         glossaryJson: params.glossary ?? null,
+        decisionsJson: params.decisions ?? null,
+        actionItemsJson: params.actionItems ?? null,
+        sentiment: params.sentiment ?? null,
       },
     });
   }
@@ -89,6 +100,9 @@ export class PrismaChannelSummaryStore implements ChannelSummaryStore {
       topics: (row.topicsJson as string[] | null) ?? undefined,
       threads: (row.threadsJson as string[] | null) ?? undefined,
       unresolved: (row.unresolvedJson as string[] | null) ?? undefined,
+      decisions: (row.decisionsJson as string[] | null) ?? undefined,
+      actionItems: (row.actionItemsJson as string[] | null) ?? undefined,
+      sentiment: (row.sentiment as string | null) ?? undefined,
       glossary: (row.glossaryJson as Record<string, string> | null) ?? undefined,
       updatedAt: row.updatedAt as Date,
     };
