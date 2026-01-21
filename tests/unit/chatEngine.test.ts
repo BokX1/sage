@@ -121,6 +121,9 @@ describe('ChatEngine', () => {
       previousSummary: 'Old summary',
       userMessage: 'I like dark mode',
       assistantReply: 'Sure, updated.',
+      channelId: 'chan1',
+      guildId: null,
+      userId: 'user1',
     });
 
     // Wait for background promise

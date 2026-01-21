@@ -1,11 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { classifyStyle } from '../../../src/core/agentRuntime/styleClassifier';
 import { composeSystemPrompt } from '../../../src/core/agentRuntime/promptComposer';
-import {
-  budgetSystemPrompt,
-  PromptBlock,
-  renderPromptBlocks,
-} from '../../../src/core/agentRuntime/promptBlocks';
 
 describe('Style Classifier (D8)', () => {
   it('detects high humor', () => {
@@ -29,63 +24,10 @@ describe('Style Classifier (D8)', () => {
   });
 });
 
-describe('Prompt Blocks & Budgeting', () => {
-  it('sorts blocks deterministically', () => {
-    const blocks: PromptBlock[] = [
-      { id: 'b', title: 'B', content: 'b', priority: 10 },
-      { id: 'a', title: 'A', content: 'a', priority: 10 },
-      { id: 'c', title: 'C', content: 'c', priority: 20 },
-    ];
-    const rendered = renderPromptBlocks(blocks);
-    // Expect C (p20), then A (p10, title A), then B (p10, title B)
-    // Note: render checks title first.
-    // ## C ... ## A ... ## B
-    expect(rendered.indexOf('## C')).toBeLessThan(rendered.indexOf('## A'));
-    expect(rendered.indexOf('## A')).toBeLessThan(rendered.indexOf('## B'));
-  });
-
-  it('drops low priority non-essential blocks first', () => {
-    const blocks: PromptBlock[] = [
-      { id: 'core', title: 'Core', content: 'core', priority: 100, essential: true },
-      { id: 'humor', title: 'Humor', content: 'humor block', priority: 50 },
-      { id: 'style', title: 'Style', content: 'style block', priority: 60 },
-    ];
-
-    // Estimator is approx chars/4.
-    // "humor block" (11) -> 3 tok + 4 = 7
-    // "style block" (11) -> 3 tok + 4 = 7
-    // "core" (4) -> 1 tok + 4 = 5
-    // T = 19. Limit 15.
-    // Should drop humor (50 < 60).
-
-    const budgeted = budgetSystemPrompt(blocks, 15);
-    const ids = budgeted.map((b) => b.id);
-
-    expect(ids).toContain('core');
-    expect(ids).toContain('style');
-    expect(ids).not.toContain('humor');
-  });
-
-  it('never drops essential blocks even if over budget', () => {
-    const blocks: PromptBlock[] = [
-      {
-        id: 'core',
-        title: 'Core',
-        content: 'very long core content '.repeat(100),
-        priority: 100,
-        essential: true,
-      },
-    ];
-    // Budget 0
-    const budgeted = budgetSystemPrompt(blocks, 0);
-    expect(budgeted.length).toBe(1);
-    expect(budgeted[0].id).toBe('core');
-  });
-});
-
 describe('Prompt Composer Integration', () => {
   it('composes system prompt with style hint', () => {
     const prompt = composeSystemPrompt({
+      userProfileSummary: null,
       style: {
         verbosity: 'low',
         formality: 'high',
@@ -97,10 +39,14 @@ describe('Prompt Composer Integration', () => {
     expect(prompt).toContain('Verbosity: low');
     expect(prompt).toContain('Humor: none');
     expect(prompt).toContain('You are Sage'); // Identity block
+    expect(prompt).toContain('## User Context'); // Memory block
   });
 
-  it('includes humor policy by default', () => {
-    const prompt = composeSystemPrompt();
-    expect(prompt).toContain('Humor Policy');
+  it('includes default sections', () => {
+    const prompt = composeSystemPrompt({
+      userProfileSummary: 'User loves cats',
+    });
+    expect(prompt).toContain('User loves cats');
+    expect(prompt).toContain('## Priority Instruction');
   });
 });

@@ -13,7 +13,7 @@
 export { runChatTurn, type RunChatTurnParams, type RunChatTurnResult } from './agentRuntime';
 
 // Prompt composition
-export { type PromptBlock, renderPromptBlocks } from './promptBlocks';
+
 export {
   composeSystemPrompt,
   getCorePromptContent,

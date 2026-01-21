@@ -1,91 +1,60 @@
-import { PromptBlock, renderPromptBlocks, budgetSystemPrompt } from './promptBlocks';
 import { StyleProfile } from './styleClassifier';
-import { config } from '../config/env';
-
-/**
- * Identity Block (Essential)
- * Basic persona and operational rules.
- */
-const IDENTITY_BLOCK: PromptBlock = {
-  id: 'identity',
-  title: '',
-  priority: 100,
-  essential: true,
-  content: `You are Sage, a helpful personalized Discord chatbot.
-- Be concise, practical, and friendly.
-- Ask a clarifying question when needed.
-- If the user requests up-to-date facts, answer with current information if available.`,
-};
-
-/**
- * Safety & Tools Block (Essential)
- * Critical rules about tool usage disclosure and references.
- */
-const SAFETY_BLOCK: PromptBlock = {
-  id: 'safety',
-  title: 'Safety & Tools',
-  priority: 99,
-  essential: true,
-  content: `- Never describe your internal process. Never mention searching, browsing, tools, function calls, or how you obtained information.
-- Do not say things like "I searched", "I looked up", "I found online", "I can't browse", or any equivalent.
-- When it improves trust, include a short "References:" section with 1–5 links or source names. Do not say you searched for them; just list them.`,
-};
-
-/**
- * Humor Policy Block (Non-Essential)
- * General guidelines on humor usage.
- */
-const HUMOR_POLICY_BLOCK: PromptBlock = {
-  id: 'humor_policy', // Deterministic ID
-  title: 'Humor Policy',
-  priority: 80,
-  essential: false,
-  content: `- Humor should be brief, non-disruptive, and never mean-spirited.
-- If the user indicates a serious context or asks for no jokes, disable all humor immediately.`,
-};
 
 export interface ComposeSystemPromptParams {
-  /** Additional prompt blocks to include (optional, for expansion) */
-  additionalBlocks?: PromptBlock[];
+  /** User profile summary for personalization */
+  userProfileSummary: string | null;
   /** Detected style profile to mirror or adapt to */
   style?: StyleProfile;
 }
 
 /**
- * Compose the system prompt for chat turns.
- * Uses decomposed blocks, injects style hints, and enforces token budget.
+ * Compose the system prompt using the "Context-First" architecture.
+ *
+ * Structure:
+ * 1. Base Identity (Kernel)
+ * 2. User Context (Memory)
+ * 3. Interaction Mode (Style)
+ * 4. Priority Instructions (Hierarchy enforcement)
  */
-export function composeSystemPrompt(params?: ComposeSystemPromptParams): string {
-  const blocks: PromptBlock[] = [IDENTITY_BLOCK, SAFETY_BLOCK, HUMOR_POLICY_BLOCK];
+export function composeSystemPrompt(params: ComposeSystemPromptParams): string {
+  const { userProfileSummary, style } = params;
 
-  if (params?.additionalBlocks) {
-    blocks.push(...params.additionalBlocks);
-  }
+  // 1. Base Identity (Kernel)
+  const baseIdentity = `You are Sage, an autonomous, context-aware Discord agent.
+You remember conversations, track relationships, and generate personalized responses.`;
 
-  if (params?.style) {
-    const { verbosity, formality, humor, directness } = params.style;
-    blocks.push({
-      id: 'style_hint',
-      title: 'Style Hint',
-      priority: 85,
-      essential: false,
-      content: `Adjust your response to match the user's style:
+  // 2. User Context (Memory)
+  // This is the most critical section. It MUST exist if we have data.
+  const memorySection = userProfileSummary
+    ? `## User Context\n${userProfileSummary}`
+    : `## User Context\n(No specific user data available yet)`;
+
+  // 3. Interaction Mode (Style)
+  // Dynamic style injection based on heurstics, but capable of being overridden by memory.
+  let styleInstructions = 'Response style: Concise, helpful, and friendly.';
+
+  if (style) {
+    const { verbosity, formality, humor, directness } = style;
+    styleInstructions = `Response style:
 - Verbosity: ${verbosity}
 - Formality: ${formality}
 - Humor: ${humor}
-- Directness: ${directness}`,
-    });
+- Directness: ${directness}`;
   }
 
-  // Apply budgeting (D5 integration): Drop non-essential blocks if over limit
-  const budgetedBlocks = budgetSystemPrompt(blocks, config.systemPromptMaxTokens);
+  const modeSection = `## Current Interaction Mode\n${styleInstructions}`;
 
-  return renderPromptBlocks(budgetedBlocks);
+  // 4. Priority Instructions (Hierarchy Enforcement)
+  const prioritySection = `## Priority Instruction
+**Interaction Mode adapts to the immediate conversation, but NEVER violate User Context preferences.**`;
+
+  // Combine into a single coherent system prompt
+  return [baseIdentity, memorySection, modeSection, prioritySection].join('\n\n');
 }
 
 /**
- * Get the raw core prompt content (for backwards compatibility / testing)
+ * Legacy compatibility helper - irrelevant in new architecture but kept to prevent breakages if referenced elsewhere.
  */
 export function getCorePromptContent(): string {
-  return [IDENTITY_BLOCK.content, SAFETY_BLOCK.content].join('\n\n');
+  return composeSystemPrompt({ userProfileSummary: null });
 }

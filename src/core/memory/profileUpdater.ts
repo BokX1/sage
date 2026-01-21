@@ -3,52 +3,73 @@ import { config } from '../config/env';
 import { config as appConfig } from '../../config';
 import { logger } from '../utils/logger';
 import { LLMClient, LLMRequest, LLMProviderName } from '../llm/types';
-import { limitConcurrency } from '../utils/concurrency';
+import { limitByKey } from '../utils/perKeyConcurrency';
+import { getRecentMessages } from '../awareness/channelRingBuffer';
+import { buildTranscriptBlock } from '../awareness/transcriptBuilder';
 
-// Limit global profile updates to 2 concurrent operations
-const profileUpdateLimit = limitConcurrency(2);
+// Note: Global request limit is handled by the LLM client itself (rate limiting/queuing)
+// Here we enforce Per-User Sequential consistency.
+// Limit global profile updates to 2 concurrent operations (legacy global limit, we now use per-key)
+// const profileUpdateLimit = limitConcurrency(2);
 
 /**
  * ANALYST SYSTEM PROMPT
- * The analyst does the hard work: reads previous summary + new interaction,
+ * The analyst does the hard work: reads previous summary + recent context,
  * then outputs the UPDATED SUMMARY TEXT directly.
- * If nothing new was learned, it outputs the previous summary unchanged.
  */
 const ANALYST_SYSTEM_PROMPT = `You are an expert User Profile Analyst.
 Your goal is to maintain a high-fidelity, evolving model of the user.
 
-Input: Previous Profile + Latest Interaction
-Output: The FULL Updated Profile (Previous + New merged)
+Input: Previous Profile + Recent Conversation Context
+Output: The FULL Updated Profile (Previous + New merged) with Time-Weighted Structure.
 
 Core Instructions:
 1. **Analyze Deeply**: Look beyond surface facts. Identify values, communication style, technical proficiency, and recurring patterns.
 2. **Merge & Evolve**: Integrate new insights with the existing profile. Refine outdated beliefs.
 3. **Be Concise but Nuanced**: Use dense, descriptive language. Capture the "vibe" of the user.
 
+Structure Requirements:
+- You MUST organize output into two sections (Use "###" headers for nesting):
+  1. \`### Core Identity\` (Stable traits, Facts > 7 days old)
+  2. \`### Active Context\` (Current mood, Projects, Volatile facts < 7 days old)
+- **Empty State**: If a section has no data, write "(None yet)". Do NOT invent data to fill space.
+
+Time-Weighting Rules:
+- **Tagging**: Every new fact MUST have a timestamp: \`[Date: YYYY-MM-DD]\`.
+- **Promotion**: Compare [Fact Date] to [Current Date]. If a fact is > 7 days old and consistent, move it to \`### Core Identity\`.
+- **Transient vs Core**: If a NEW behavior contradicts a CORE trait, do NOT delete the core trait. Log the new behavior in \`### Active Context\` as a temporary mood.
+
 Analysis Dimensions:
+- **Interaction Preferences (CRITICAL)**: How they want the bot to act (e.g., "be concise", "no emojis").
 - **Psychological**: Values, motivations, hidden drivers.
 - **Interaction Style**: Patience, humor, detail-orientation, tone.
 - **Technical Context**: Projects, languages, preferred tools/frameworks.
-- **Relationships**: Dynamics with other users or the bot.
 
 Rules:
-- PRESERVE existing stable facts unless contradicted.
-- IGNORE transient emotional outbursts unless they form a pattern.
-- CAPTURE specific preferences and "tribal knowledge".
+- **PRESERVATION & CONSOLIDATION**: You MUST copy forward existing facts, BUT you should merge redundancies.
+    - *Example*: If 5 facts say "Loves Python" with different dates, merge them: \`[Date: <Oldest>] Loves Python (Consistently expressed)\`.
+- **PROMOTION**: If a fact is > 7 days old, move it to \`### Core Identity\`.
+- **FAST-TRACK**: Promote EXPLICIT self-definitions (e.g., "My name is X", "I am a Y developer") to \`### Core Identity\` IMMEDIATELY.
+- **PERSISTENCE**: If a fact is < 7 days old, keep it in \`### Active Context\`.
+- **CONFLICTS**: If Active Context contradicts Core Identity, note it as a "Temporary Mood" in Active Context. Do NOT delete the Core Identity.
 - NO PII/SECRETS: Do not store phone numbers, keys, or passwords.
 - **Output the FULL merged profile text** (do NOT output just the changes).`;
 
 /**
  * FORMATTER SYSTEM PROMPT
- * Pure text-to-JSON wrapper. Does NOT interpret, extract, or rewrite.
- * Just wraps the analyst's output in JSON format.
+ * Pure text-to-JSON wrapper.
  */
-const FORMATTER_SYSTEM_PROMPT = `Wrap the given text in JSON format.
+const FORMATTER_SYSTEM_PROMPT = `You are a JSON wrapper.
+Task: Wrap the user's text into a valid JSON object.
 
-Output: {"summary": "<the text>"}
+Output format: {"summary": "<the text>"}
 
-Do NOT modify, summarize, or extract from the text.
-Just put the exact text inside the JSON summary field.`;
+CRITICAL RULES:
+- ESCAPE all double quotes (") as (\\").
+- ESCAPE all newlines as (\\\\n).
+- The "summary" value must be a single valid JSON string.
+- Do NOT modify the content.
+- You are FORBIDDEN from summarizing, rewriting, or fixing the text. Copy it character-for-character.`;
 
 // Cached analyst client
 let analystClientCache: { client: LLMClient; provider: LLMProviderName } | null = null;
@@ -104,26 +125,45 @@ function getFormatterClient(): LLMClient {
 
 /**
  * Two-step profile update pipeline:
- * 1. ANALYST (deepseek, temp=0.3): Analyze the interaction freely (no JSON constraint)
- * 2. FORMATTER (qwen-coder, temp=0.0): Convert analysis to strict JSON
+ * 1. ANALYST: Analyze the interaction freely (no JSON constraint)
+ * 2. FORMATTER: Convert analysis to strict JSON
  */
 export async function updateProfileSummary(params: {
   previousSummary: string | null;
   userMessage: string;
   assistantReply: string;
+  channelId: string;
+  guildId: string | null;
+  userId: string;
 }): Promise<string | null> {
-  const { previousSummary, userMessage, assistantReply } = params;
+  const { previousSummary, userMessage, assistantReply, channelId, guildId, userId } = params;
 
   try {
     // ========================================
-    // CONCURRENCY CONTROL
+    // PER-USER SEQUENTIAL CONTROL
     // ========================================
-    return profileUpdateLimit(async () => {
+    // Ensure updates for the same user happen one at a time to prevent race conditions
+    // on 'previousSummary'.
+    const limit = limitByKey(userId, 1);
+
+    return limit(async () => {
+      // Fetch Recent Context (Window of ~15 messages)
+      const recentMessages = getRecentMessages({
+        guildId,
+        channelId,
+        limit: 15, // Context window size
+      });
+      // Ensure the latest interaction is included if not yet in buffer (race condition safety)
+      // Note: Ring buffer usually updates immediately, but just in case.
+
+      const recentHistory = buildTranscriptBlock(recentMessages, 4000) || '';
+
       // ========================================
       // STEP 1: ANALYST (Outputs Updated Summary)
       // ========================================
       const updatedSummaryText = await runAnalyst({
         previousSummary,
+        recentHistory,
         userMessage,
         assistantReply,
       });
@@ -165,17 +205,26 @@ export async function updateProfileSummary(params: {
  */
 async function runAnalyst(params: {
   previousSummary: string | null;
+  recentHistory: string;
   userMessage: string;
   assistantReply: string;
 }): Promise<string | null> {
-  const { previousSummary, userMessage, assistantReply } = params;
+  const { previousSummary, recentHistory, userMessage, assistantReply } = params;
   const { client } = getAnalystClient();
+  const currentDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-  const userPrompt = `Previous Summary: ${previousSummary || 'None (new user)'}
+  const userPrompt = `Current Date: ${currentDate}
 
-Latest Interaction:
+Previous Summary: ${previousSummary || 'None (new user)'}
+
+Recent Conversation Context:
+${recentHistory}
+
+Latest Interaction (Focus):
 User: ${userMessage}
 Assistant: ${assistantReply}
+
+(Note: The Latest User message may appear twice if already ingested. Focus on the flow.)
 
 Output the updated summary:`;
 

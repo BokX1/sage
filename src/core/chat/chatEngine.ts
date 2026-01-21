@@ -3,6 +3,8 @@ import { updateProfileSummary } from '../memory/profileUpdater';
 import { logger } from '../utils/logger';
 import { runChatTurn } from '../agentRuntime';
 
+import { limitByKey } from '../utils/perKeyConcurrency';
+
 /**
  * Generate a chat reply using the agent runtime.
  * This is the main entry point for chat interactions.
@@ -24,62 +26,70 @@ export async function generateChatReply(params: {
   mentionedUserIds?: string[];
   invokedBy?: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
 }): Promise<{ replyText: string }> {
-  const {
-    traceId,
-    userId,
-    channelId,
-    guildId,
-    messageId,
-    userText,
-    replyToBotText,
-    intent,
-    mentionedUserIds,
-    invokedBy = 'mention',
-  } = params;
+  // Enforce sequential processing per user
+  const limit = limitByKey(params.userId, 1);
 
-  // 1. Load Profile
-  let profileSummary: string | null = null;
-  try {
-    profileSummary = await getUserProfile(userId);
-  } catch (err) {
-    logger.warn({ error: err, userId }, 'Failed to load user profile (non-fatal)');
-  }
+  return limit(async () => {
+    const {
+      traceId,
+      userId,
+      channelId,
+      guildId,
+      messageId,
+      userText,
+      replyToBotText,
+      intent,
+      mentionedUserIds,
+      invokedBy = 'mention',
+    } = params;
 
-  logger.debug({ userId, profileSummary: profileSummary || 'None' }, 'Memory Context');
+    // 1. Load Profile
+    let profileSummary: string | null = null;
+    try {
+      profileSummary = await getUserProfile(userId);
+    } catch (err) {
+      logger.warn({ error: err, userId }, 'Failed to load user profile (non-fatal)');
+    }
 
-  // 2. Call Agent Runtime
-  const result = await runChatTurn({
-    traceId,
-    userId,
-    channelId,
-    guildId,
-    messageId,
-    userText,
-    userProfileSummary: profileSummary,
-    replyToBotText: replyToBotText ?? null,
-    intent: intent ?? null,
-    mentionedUserIds,
-    invokedBy,
-  });
+    logger.debug({ userId, profileSummary: profileSummary || 'None' }, 'Memory Context');
 
-  const replyText = result.replyText;
-
-  // 3. Update Profile (Background)
-  updateProfileSummary({
-    previousSummary: profileSummary,
-    userMessage: userText,
-    assistantReply: replyText,
-  })
-    .then((newSummary) => {
-      if (newSummary && newSummary !== profileSummary) {
-        upsertUserProfile(userId, newSummary).catch((err) =>
-          logger.error({ error: err }, 'Failed to save profile'),
-        );
-      }
-    })
-    .catch((err) => {
-      logger.error({ error: err }, 'Profile update failed');
+    // 2. Call Agent Runtime
+    const result = await runChatTurn({
+      traceId,
+      userId,
+      channelId,
+      guildId,
+      messageId,
+      userText,
+      userProfileSummary: profileSummary,
+      replyToBotText: replyToBotText ?? null,
+      intent: intent ?? null,
+      mentionedUserIds,
+      invokedBy,
     });
 
-  return { replyText };
+    const replyText = result.replyText;
+
+    // 3. Update Profile (Background)
+    updateProfileSummary({
+      previousSummary: profileSummary,
+      userMessage: userText,
+      assistantReply: replyText,
+      channelId,
+      guildId,
+      userId,
+    })
+      .then((newSummary) => {
+        if (newSummary && newSummary !== profileSummary) {
+          upsertUserProfile(userId, newSummary).catch((err) =>
+            logger.error({ error: err }, 'Failed to save profile'),
+          );
+        }
+      })
+      .catch((err) => {
+        logger.error({ error: err }, 'Profile update failed');
+      });
+
+    return { replyText };
+  });
 }

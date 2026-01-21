@@ -79,11 +79,18 @@ If you have nothing to add, output '[SILENCE]' (without quotes).`;
     }
   }
 
+  // D9: Context-First Persona Integration
+  // We now pass userProfileSummary and style into the unified composer.
+  const baseSystemContent = composeSystemPrompt({
+    userProfileSummary,
+    style
+  }) + autopilotInstruction;
+
   const blocks: ContextBlock[] = [
     {
       id: 'base_system',
       role: 'system',
-      content: composeSystemPrompt({ style }) + autopilotInstruction,
+      content: baseSystemContent,
       priority: 100,
       truncatable: false,
     },
@@ -144,19 +151,7 @@ If you have nothing to add, output '[SILENCE]' (without quotes).`;
     });
   }
 
-  // MOVED: Memory block placed HERE for high Recency Bias (after transcript)
-  if (userProfileSummary) {
-    blocks.push({
-      id: 'memory',
-      role: 'system',
-      content: `## User Personalization (CRITICAL)
-Use these known facts about the user to answer their question:
-${userProfileSummary}`,
-      priority: 90,
-      hardMaxTokens: config.contextBlockMaxTokensMemory,
-      truncatable: true,
-    });
-  }
+  // MEMORY BLOCK REMOVED: Now integrated directly into 'base_system' via composeSystemPrompt
 
   if (intentHint) {
     blocks.push({
