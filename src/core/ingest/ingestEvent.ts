@@ -86,6 +86,11 @@ export async function ingestEvent(event: Event): Promise<void> {
 
       if (config.MESSAGE_DB_STORAGE_ENABLED) {
         await prismaMessageStore.append(message);
+        await prismaMessageStore.pruneChannelToLimit({
+          guildId: message.guildId,
+          channelId: message.channelId,
+          limit: config.CONTEXT_TRANSCRIPT_MAX_MESSAGES,
+        });
       }
 
       // Update relationship graph (D7)
