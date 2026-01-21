@@ -27,6 +27,10 @@ export async function runConfigDoctor() {
     },
     {
       name: 'Pollinations Model',
+      // Allow gemini, deepseek, or other valid pollinations models
+      valid: ['gemini', 'deepseek', 'openai', 'mistral', 'llama', 'gpt-4o', 'qwen-coder'].some((m) =>
+        (config.pollinationsModel || 'gemini').includes(m),
+      ),
       value: config.pollinationsModel || 'gemini (default)',
     },
     {

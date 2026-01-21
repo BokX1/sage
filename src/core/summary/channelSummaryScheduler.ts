@@ -157,14 +157,19 @@ export class ChannelSummaryScheduler {
     this.dirtyChannels.delete(key);
   }
 
-  async forceSummarize(guildId: string, channelId: string): Promise<StructuredSummary | null> {
+  async forceSummarize(
+    guildId: string,
+    channelId: string,
+    windowMinutesOverride?: number,
+  ): Promise<StructuredSummary | null> {
     if (!isLoggingEnabled(guildId, channelId)) {
       logger.warn({ guildId, channelId }, 'Force summary aborted: logging disabled');
       return null;
     }
 
+    const windowMinutes = windowMinutesOverride ?? appConfig.SUMMARY_ROLLING_WINDOW_MIN;
     const nowMs = this.now();
-    const windowStart = new Date(nowMs - appConfig.SUMMARY_ROLLING_WINDOW_MIN * 60 * 1000);
+    const windowStart = new Date(nowMs - windowMinutes * 60 * 1000);
     const windowEnd = new Date(nowMs);
 
     // Bypass checks, fetch standard limit

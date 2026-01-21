@@ -477,7 +477,8 @@ async function handleAdminSummarize(interaction: ChatInputCommandInteraction) {
       return;
     }
 
-    const summary = await scheduler.forceSummarize(guildId, targetChannel.id);
+    // Use 24-hour lookback (1440 minutes) for forced admin summaries to ensure data is found
+    const summary = await scheduler.forceSummarize(guildId, targetChannel.id, 1440);
 
     if (!summary) {
       await interaction.editReply(
