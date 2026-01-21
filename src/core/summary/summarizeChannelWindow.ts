@@ -4,8 +4,8 @@ import { LLMClient, LLMRequest } from '../llm/types';
 import { logger } from '../utils/logger';
 import { ChannelMessage } from '../awareness/types';
 
-const MAX_INPUT_MESSAGES = 120;
-const MAX_INPUT_CHARS = 12_000;
+const MAX_INPUT_MESSAGES = 800;
+const MAX_INPUT_CHARS = 80_000;
 
 export interface StructuredSummary {
   windowStart: Date;
@@ -266,7 +266,7 @@ async function runAnalyst(systemPrompt: string, userPrompt: string): Promise<str
       { role: 'user', content: userPrompt },
     ],
     temperature: 0.3,
-    maxTokens: 2048,
+    maxTokens: 4096,
     // NO responseFormat - free text output
   };
 
@@ -296,7 +296,7 @@ async function runFormatter(analysisText: string): Promise<Record<string, unknow
     ],
     responseFormat: 'json_object',
     temperature: 0,
-    maxTokens: 2048,
+    maxTokens: 4096,
   };
 
   try {
@@ -332,7 +332,7 @@ Output: {"summaryText": "...", "topics": [], "threads": [], "decisions": [], "ac
     ],
     responseFormat: 'json_object',
     temperature: 0,
-    maxTokens: 2048,
+    maxTokens: 4096,
   };
 
   try {
