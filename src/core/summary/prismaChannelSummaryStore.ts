@@ -30,9 +30,7 @@ export class PrismaChannelSummaryStore implements ChannelSummaryStore {
     sentiment?: string;
     glossary?: Record<string, string>;
   }): Promise<void> {
-    console.log('PrismaChannelSummaryStore.upsertSummary called');
     const channelSummary = getChannelSummaryClient();
-    console.log('Client available:', !!channelSummary, 'Upsert fn:', !!channelSummary?.upsert);
     await channelSummary.upsert({
       where: {
         guildId_channelId_kind: {

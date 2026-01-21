@@ -4,6 +4,11 @@ import { ChannelMessage } from './types';
 
 type PrismaChannelMessageClient = {
   create: (args: { data: Record<string, unknown> }) => Promise<unknown>;
+  upsert: (args: {
+    where: Record<string, unknown>;
+    create: Record<string, unknown>;
+    update: Record<string, unknown>;
+  }) => Promise<unknown>;
   findMany: (args: {
     where: Record<string, unknown>;
     orderBy: { timestamp: 'asc' | 'desc' };
@@ -23,19 +28,23 @@ export class PrismaMessageStore implements MessageStore {
 
   async append(message: ChannelMessage): Promise<void> {
     const channelMessage = getChannelMessageClient();
-    await channelMessage.create({
-      data: {
-        messageId: message.messageId,
-        guildId: message.guildId,
-        channelId: message.channelId,
-        authorId: message.authorId,
-        authorDisplayName: message.authorDisplayName,
-        timestamp: message.timestamp,
-        content: message.content,
-        replyToMessageId: message.replyToMessageId ?? null,
-        mentionsUserIds: message.mentionsUserIds,
-        mentionsBot: message.mentionsBot,
-      },
+    const data = {
+      messageId: message.messageId,
+      guildId: message.guildId,
+      channelId: message.channelId,
+      authorId: message.authorId,
+      authorDisplayName: message.authorDisplayName,
+      timestamp: message.timestamp,
+      content: message.content,
+      replyToMessageId: message.replyToMessageId ?? null,
+      mentionsUserIds: message.mentionsUserIds,
+      mentionsBot: message.mentionsBot,
+    };
+
+    await channelMessage.upsert({
+      where: { messageId: message.messageId },
+      create: data,
+      update: data,
     });
   }
 
