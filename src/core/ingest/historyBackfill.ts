@@ -4,6 +4,10 @@ import { logger } from '../utils/logger';
 import { ingestEvent } from '../ingest/ingestEvent';
 import { isLoggingEnabled } from '../settings/guildChannelSettings';
 import { config as appConfig } from '../../config';
+import { PrismaMessageStore } from '../awareness/prismaMessageStore';
+import { trimChannelMessages } from '../awareness/channelRingBuffer';
+
+const prismaMessageStore = new PrismaMessageStore();
 
 /**
  * Backfill historical messages for a channel.
@@ -34,6 +38,32 @@ export async function backfillChannelHistory(
 
     for (const message of sorted) {
       await processBackfillMessage(message);
+    }
+
+    const trimmedInMemory = trimChannelMessages({
+      guildId: channel.guildId,
+      channelId: channel.id,
+      maxMessages: limit,
+    });
+    if (trimmedInMemory > 0) {
+      logger.info(
+        { channelId, removed: trimmedInMemory, limit },
+        'Trimmed in-memory transcript after backfill',
+      );
+    }
+
+    if (appConfig.MESSAGE_DB_STORAGE_ENABLED) {
+      const prunedDb = await prismaMessageStore.pruneChannelToLimit({
+        guildId: channel.guildId,
+        channelId: channel.id,
+        limit,
+      });
+      if (prunedDb > 0) {
+        logger.info(
+          { channelId, removed: prunedDb, limit },
+          'Pruned stored transcript history after backfill',
+        );
+      }
     }
 
     logger.info({ channelId, count: sorted.length }, 'History backfill complete');

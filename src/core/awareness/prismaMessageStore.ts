@@ -8,6 +8,8 @@ type PrismaChannelMessageClient = {
     where: Record<string, unknown>;
     orderBy: { timestamp: 'asc' | 'desc' };
     take: number;
+    skip?: number;
+    select?: Record<string, boolean>;
   }) => Promise<Record<string, unknown>[]>;
   deleteMany: (args: { where: Record<string, unknown> }) => Promise<{ count: number }>;
 };
@@ -17,6 +19,8 @@ function getChannelMessageClient(): PrismaChannelMessageClient {
 }
 
 export class PrismaMessageStore implements MessageStore {
+  private static readonly PRUNE_BATCH_SIZE = 1000;
+
   async append(message: ChannelMessage): Promise<void> {
     const channelMessage = getChannelMessageClient();
     await channelMessage.create({
@@ -76,5 +80,53 @@ export class PrismaMessageStore implements MessageStore {
       where: { timestamp: { lt: new Date(cutoffMs) } },
     });
     return result.count;
+  }
+
+  async pruneChannelToLimit(params: {
+    guildId: string | null;
+    channelId: string;
+    limit: number;
+  }): Promise<number> {
+    if (params.limit <= 0) {
+      return 0;
+    }
+
+    const channelMessage = getChannelMessageClient();
+    const where = {
+      guildId: params.guildId,
+      channelId: params.channelId,
+    };
+    let removedTotal = 0;
+
+    while (true) {
+      const rows = await channelMessage.findMany({
+        where,
+        orderBy: { timestamp: 'desc' },
+        skip: params.limit,
+        select: { messageId: true },
+        take: PrismaMessageStore.PRUNE_BATCH_SIZE,
+      });
+
+      if (rows.length === 0) {
+        break;
+      }
+
+      const result = await channelMessage.deleteMany({
+        where: {
+          guildId: params.guildId,
+          channelId: params.channelId,
+          messageId: {
+            in: rows.map((row) => row.messageId as string),
+          },
+        },
+      });
+      removedTotal += result.count;
+
+      if (rows.length < PrismaMessageStore.PRUNE_BATCH_SIZE) {
+        break;
+      }
+    }
+
+    return removedTotal;
   }
 }

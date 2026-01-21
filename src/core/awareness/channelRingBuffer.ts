@@ -68,6 +68,26 @@ export function clearChannel(params: { guildId: string | null; channelId: string
   channelBuffers.delete(key);
 }
 
+export function trimChannelMessages(params: {
+  guildId: string | null;
+  channelId: string;
+  maxMessages: number;
+}): number {
+  const key = makeChannelKey(params.guildId, params.channelId);
+  const buffer = channelBuffers.get(key);
+  if (!buffer) {
+    return 0;
+  }
+
+  const removed = enforceMax(buffer, params.maxMessages);
+  if (buffer.length === 0) {
+    channelBuffers.delete(key);
+  } else {
+    channelBuffers.set(key, buffer);
+  }
+  return removed;
+}
+
 export function deleteOlderThan(cutoffMs: number): number {
   let deleted = 0;
   for (const [key, buffer] of channelBuffers.entries()) {
