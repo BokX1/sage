@@ -185,7 +185,7 @@ Output the updated summary:`;
       { role: 'user', content: userPrompt },
     ],
     temperature: 0.3, // Analyst temperature: creative but focused
-    maxTokens: 1024,
+    maxTokens: 4096,
     // NO responseFormat - allow free text output
     timeout: appConfig.TIMEOUT_MEMORY_MS, // Relaxed timeout for background
   };
@@ -220,7 +220,7 @@ async function runFormatter(params: { summaryText: string }): Promise<{ summary?
     ],
     responseFormat: 'json_object',
     temperature: 0, // Formatter temperature: deterministic
-    maxTokens: 1024,
+    maxTokens: 4096,
     timeout: appConfig.TIMEOUT_MEMORY_MS, // Relaxed timeout for background
   };
 
@@ -267,7 +267,7 @@ ${summaryText}`;
     ],
     responseFormat: 'json_object',
     temperature: 0,
-    maxTokens: 1024,
+    maxTokens: 4096,
     timeout: appConfig.TIMEOUT_MEMORY_MS, // Relaxed timeout for background
   };
 
