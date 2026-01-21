@@ -57,31 +57,31 @@ const envSchema = z.object({
   SUMMARY_MODEL: z.string().default('openai-large'), // Changed from 'gemini' to 'openai-large'
 
   // Context Budgeting (D5)
-  CONTEXT_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(8000),
-  CONTEXT_RESERVED_OUTPUT_TOKENS: z.coerce.number().int().positive().default(4000),
-  SYSTEM_PROMPT_MAX_TOKENS: z.coerce.number().int().positive().default(3000),
+  CONTEXT_MAX_INPUT_TOKENS: z.coerce.number().int().positive().default(16000),
+  CONTEXT_RESERVED_OUTPUT_TOKENS: z.coerce.number().int().positive().default(8000),
+  SYSTEM_PROMPT_MAX_TOKENS: z.coerce.number().int().positive().default(6000),
   TOKEN_ESTIMATOR: z.enum(['heuristic']).default('heuristic'),
   TOKEN_HEURISTIC_CHARS_PER_TOKEN: z.coerce.number().int().positive().default(4),
-  CONTEXT_BLOCK_MAX_TOKENS_TRANSCRIPT: z.coerce.number().int().positive().default(4000),
-  CONTEXT_BLOCK_MAX_TOKENS_ROLLING_SUMMARY: z.coerce.number().int().positive().default(2400),
-  CONTEXT_BLOCK_MAX_TOKENS_PROFILE_SUMMARY: z.coerce.number().int().positive().default(2400),
-  CONTEXT_BLOCK_MAX_TOKENS_MEMORY: z.coerce.number().int().positive().default(3000),
-  CONTEXT_BLOCK_MAX_TOKENS_REPLY_CONTEXT: z.coerce.number().int().positive().default(1600),
-  CONTEXT_USER_MAX_TOKENS: z.coerce.number().int().positive().default(5000),
+  CONTEXT_BLOCK_MAX_TOKENS_TRANSCRIPT: z.coerce.number().int().positive().default(8000),
+  CONTEXT_BLOCK_MAX_TOKENS_ROLLING_SUMMARY: z.coerce.number().int().positive().default(4800),
+  CONTEXT_BLOCK_MAX_TOKENS_PROFILE_SUMMARY: z.coerce.number().int().positive().default(4800),
+  CONTEXT_BLOCK_MAX_TOKENS_MEMORY: z.coerce.number().int().positive().default(6000),
+  CONTEXT_BLOCK_MAX_TOKENS_REPLY_CONTEXT: z.coerce.number().int().positive().default(3200),
+  CONTEXT_USER_MAX_TOKENS: z.coerce.number().int().positive().default(10000),
   CONTEXT_TRUNCATION_NOTICE: z
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .default('true'),
 
   // D9: MoE Orchestration
-  CONTEXT_BLOCK_MAX_TOKENS_EXPERTS: z.coerce.number().int().positive().default(2400),
+  CONTEXT_BLOCK_MAX_TOKENS_EXPERTS: z.coerce.number().int().positive().default(4800),
   TRACE_ENABLED: z
     .enum(['true', 'false'])
     .transform((v) => v === 'true')
     .default('true'),
 
   // Relationship Hints (D7)
-  CONTEXT_BLOCK_MAX_TOKENS_RELATIONSHIP_HINTS: z.coerce.number().int().positive().default(1200),
+  CONTEXT_BLOCK_MAX_TOKENS_RELATIONSHIP_HINTS: z.coerce.number().int().positive().default(2400),
   RELATIONSHIP_HINTS_MAX_EDGES: z.coerce.number().int().positive().default(10),
   RELATIONSHIP_DECAY_LAMBDA: z.coerce.number().positive().default(0.06),
   RELATIONSHIP_WEIGHT_K: z.coerce.number().positive().default(0.2),
@@ -105,8 +105,8 @@ const envSchema = z.object({
   FORMATTER_MODEL: z.string().default('qwen-coder'),
 
   // Timeouts (Phase 7)
-  TIMEOUT_CHAT_MS: z.coerce.number().int().positive().default(60000), // 60s rigid limit for chat
-  TIMEOUT_MEMORY_MS: z.coerce.number().int().positive().default(90000), // 90s relaxed limit for background memory
+  TIMEOUT_CHAT_MS: z.coerce.number().int().positive().default(300000), // 5m rigid limit for chat
+  TIMEOUT_MEMORY_MS: z.coerce.number().int().positive().default(600000), // 10m relaxed limit for background memory
 });
 
 // Parse and validate or crash
