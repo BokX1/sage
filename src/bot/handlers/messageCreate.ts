@@ -11,6 +11,7 @@ import { shouldAllowInvocation } from '../../core/invoke/cooldown';
 import { LLMMessageContent } from '../../core/llm/types';
 import { estimateTokens } from '../../core/agentRuntime/tokenEstimate';
 import { fetchAttachmentText, FetchAttachmentResult } from '../../utils/fileHandler';
+import { smartSplit } from '../../utils/messageSplitter';
 
 const processedMessagesKey = Symbol.for('sage.handlers.messageCreate.processed');
 const registrationKey = Symbol.for('sage.handlers.messageCreate.registered');
@@ -374,24 +375,16 @@ export async function handleMessageCreate(message: Message) {
 
     // Send messages to Discord
     if (result.replyText) {
-      if (result.replyText.length > 2000) {
-        // simple chunking
-        const chunks = result.replyText.match(/.{1,2000}/g) || [];
-        const [firstChunk, ...restChunks] = chunks;
-        if (firstChunk) {
-          await message.reply({
-            content: firstChunk,
-            allowedMentions: { repliedUser: false },
-          });
-        }
-        for (const chunk of restChunks) {
-          await discordChannel.send(chunk);
-        }
-      } else {
+      const chunks = smartSplit(result.replyText, 2000);
+      const [firstChunk, ...restChunks] = chunks;
+      if (firstChunk) {
         await message.reply({
-          content: result.replyText,
+          content: firstChunk,
           allowedMentions: { repliedUser: false },
         });
+      }
+      for (const chunk of restChunks) {
+        await discordChannel.send(chunk);
       }
     }
 
