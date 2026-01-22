@@ -51,6 +51,7 @@ Input Handling:
 - **Consolidation**: Merge new insights into existing bullets. Keep the list short/dense.
 - **Conflict Resolution**: New Protocol overrides Old Protocol.
 - **Empty State**: Write "(None)" if unknown.
+- **Data Context**: Input history is Chronological (Oldest -> Newest). "Latest Interaction" is the most recent event.
 
 Output the FULL profile text.`;
 
@@ -68,6 +69,7 @@ CRITICAL RULES:
 - ESCAPE all newlines as (\\\\n).
 - The "summary" value must be a single valid JSON string.
 - Do NOT modify the content.
+- **Preserve Markdown**: The input text is structured Markdown (headers, bullets). Keep it EXACTLY as is.
 - You are FORBIDDEN from summarizing, rewriting, or fixing the text. Copy it character-for-character.`;
 
 // Cached analyst client
