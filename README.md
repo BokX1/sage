@@ -90,7 +90,7 @@ After running `npm run setup`, you'll be prompted for:
 - **Discord App ID** — Your application ID (same portal)
 - **Database URL** — Press `2` to use the Docker default
 
-**🎉 Once running, invite Sage to your server and say "Hey Sage!" to start chatting.**
+**🎉 Once running, invite Sage to your server and say "Sage, hello!" to start chatting.**
 
 ---
 
@@ -234,7 +234,7 @@ Wait 10 seconds, then try again.
 
 1. Is the bot online in your server? (check member list)
 2. Does the bot have permission to read/send messages in the channel?
-3. Are you using a wake word? Try "Hey Sage" or "Sage,"
+3. Are you using the wake word? Try "Sage, hello" or just "Sage"
 4. Run `npm run doctor` to check configuration
 
 </details>

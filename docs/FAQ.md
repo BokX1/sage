@@ -215,7 +215,7 @@ Sage responds when its wake word (default: "sage") is at the **start** of your m
 **Check these:**
 
 1. **Is Sage online?** Check the member list.
-2. **Are you using a wake word?** Default is "sage" — try "Hey Sage"
+2. **Are you using a wake word?** Default is "sage" — try "Sage, hello"
 3. **Does Sage have permissions?** It needs Send Messages and Read Message History
 4. **Is the channel blocked?** Check `LOGGING_BLOCKLIST_CHANNEL_IDS`
 5. **Rate limited?** Wait a few seconds and try again
