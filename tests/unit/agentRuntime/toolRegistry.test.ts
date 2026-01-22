@@ -171,6 +171,7 @@ describe('ToolRegistry', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error).toContain('Unknown tool');
+        expect(result.errorType).toBe('validation');
       }
     });
   });

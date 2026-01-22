@@ -25,9 +25,10 @@ export {
 
 export {
   runToolCallLoop,
-  type ToolCallEnvelope,
-  type ToolResult,
   type ToolCallLoopConfig,
   type ToolCallLoopParams,
   type ToolCallLoopResult,
 } from './toolCallLoop';
+
+export { type ToolCallEnvelope } from './toolCallParser';
+export { type ToolResult } from './toolCallExecution';
