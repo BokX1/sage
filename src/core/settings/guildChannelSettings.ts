@@ -1,15 +1,17 @@
 import { config } from '../../config';
 
 /**
- * In-memory override maps for guild/channel-specific settings.
- * These will be migrated to DB in a future phase.
+ * Manage in-memory overrides for per-guild and per-channel behavior flags.
+ *
+ * Responsibilities:
+ * - Provide logging and proactive overrides with deterministic precedence.
+ * - Enforce allowlist/blocklist gates for logging.
+ *
+ * Non-goals:
+ * - Persist overrides to durable storage.
  */
 const loggingOverrides = new Map<string, boolean>();
 const proactiveOverrides = new Map<string, boolean>();
-
-/**
- * Generate a key for guild+channel lookups.
- */
 function makeKey(guildId: string, channelId: string): string {
   return `${guildId}:${channelId}`;
 }
@@ -36,8 +38,20 @@ function isChannelAllowed(channelId: string): boolean {
 }
 
 /**
- * Check if logging is enabled for a guild/channel.
- * Priority: in-memory override > env default
+ * Determine whether logging is enabled for a specific guild/channel pair.
+ *
+ * @param guildId - Discord guild ID used to resolve per-guild overrides.
+ * @param channelId - Discord channel ID used for allowlist/blocklist checks.
+ * @returns True when logging is enabled and the channel is permitted.
+ *
+ * Side effects:
+ * - None.
+ *
+ * Error behavior:
+ * - Does not throw; relies on configuration defaults.
+ *
+ * Invariants:
+ * - Blocklist always overrides allowlist and overrides.
  */
 export function isLoggingEnabled(guildId: string, channelId: string): boolean {
   const key = makeKey(guildId, channelId);
@@ -49,8 +63,20 @@ export function isLoggingEnabled(guildId: string, channelId: string): boolean {
 }
 
 /**
- * Check if proactive posting is enabled for a guild/channel.
- * Priority: in-memory override > env default
+ * Determine whether proactive posting is enabled for a specific guild/channel pair.
+ *
+ * @param guildId - Discord guild ID used to resolve per-guild overrides.
+ * @param channelId - Discord channel ID used to resolve per-channel overrides.
+ * @returns True when proactive posting is enabled for the pair.
+ *
+ * Side effects:
+ * - None.
+ *
+ * Error behavior:
+ * - Does not throw; relies on configuration defaults.
+ *
+ * Invariants:
+ * - Overrides take precedence over environment defaults.
  */
 export function isProactiveEnabled(guildId: string, channelId: string): boolean {
   const key = makeKey(guildId, channelId);
@@ -60,8 +86,21 @@ export function isProactiveEnabled(guildId: string, channelId: string): boolean 
 }
 
 /**
- * Set logging override for a guild/channel.
- * (For future admin commands; not used in D1)
+ * Set a logging override for a guild/channel pair.
+ *
+ * @param guildId - Discord guild ID that scopes the override.
+ * @param channelId - Discord channel ID that scopes the override.
+ * @param enabled - Override value to apply.
+ * @returns Nothing.
+ *
+ * Side effects:
+ * - Mutates in-memory override state.
+ *
+ * Error behavior:
+ * - Does not throw.
+ *
+ * Invariants:
+ * - Overrides are ephemeral and lost on process restart.
  */
 export function setLoggingEnabled(guildId: string, channelId: string, enabled: boolean): void {
   const key = makeKey(guildId, channelId);
@@ -69,8 +108,21 @@ export function setLoggingEnabled(guildId: string, channelId: string, enabled: b
 }
 
 /**
- * Set proactive override for a guild/channel.
- * (For future admin commands; not used in D1)
+ * Set a proactive posting override for a guild/channel pair.
+ *
+ * @param guildId - Discord guild ID that scopes the override.
+ * @param channelId - Discord channel ID that scopes the override.
+ * @param enabled - Override value to apply.
+ * @returns Nothing.
+ *
+ * Side effects:
+ * - Mutates in-memory override state.
+ *
+ * Error behavior:
+ * - Does not throw.
+ *
+ * Invariants:
+ * - Overrides are ephemeral and lost on process restart.
  */
 export function setProactiveEnabled(guildId: string, channelId: string, enabled: boolean): void {
   const key = makeKey(guildId, channelId);
@@ -78,7 +130,18 @@ export function setProactiveEnabled(guildId: string, channelId: string, enabled:
 }
 
 /**
- * Clear all overrides (for testing or reset).
+ * Clear all in-memory overrides.
+ *
+ * @returns Nothing.
+ *
+ * Side effects:
+ * - Clears logging and proactive override maps.
+ *
+ * Error behavior:
+ * - Does not throw.
+ *
+ * Invariants:
+ * - After execution, no overrides are applied.
  */
 export function clearAllOverrides(): void {
   loggingOverrides.clear();
