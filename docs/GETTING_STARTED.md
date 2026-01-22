@@ -209,16 +209,34 @@ npm run dev
 
 **Bot Permissions:** Check these boxes:
 
-- ✅ Send Messages
-- ✅ Read Message History
-- ✅ View Channels
-- ✅ Connect (for voice awareness)
+| Permission | Integer | Purpose |
+|:-----------|:--------|:--------|
+| Send Messages | 2048 | Reply to users |
+| Read Message History | 65536 | Read conversation context |
+| View Channels | 1024 | See channels |
+| Connect | 1048576 | Voice awareness |
+
+> 💡 **Permission Total:** 1117184 (all permissions above combined)
 
 ### 6.3 Copy and Use the Link
 
 1. Scroll down and copy the **Generated URL**
 2. Paste it in your browser
 3. Select your server and click **Authorize**
+
+**Or use these quick link formats** (replace `YOUR_APP_ID`):
+
+**Recommended (minimal permissions - 1133568):**
+
+```
+https://discord.com/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot%20applications.commands&permissions=1133568
+```
+
+**Admin (full access - 8):**
+
+```
+https://discord.com/oauth2/authorize?client_id=YOUR_APP_ID&scope=bot%20applications.commands&permissions=8
+```
 
 ---
 

@@ -16,6 +16,10 @@
   <strong>Sage remembers your conversations, understands your community, and delivers intelligent responses that feel personal.</strong>
 </p>
 
+<p align="center">
+  <strong>🎮 <a href="docs/QUICKSTART.md">I just want to run the bot</a></strong> · <strong>💻 <a href="#-quick-start">I'm a developer</a></strong>
+</p>
+
 ---
 
 ## 🎯 What is Sage?
@@ -57,7 +61,9 @@ Sage is an **intelligent Discord bot** that goes beyond simple chat commands. Un
 | **Discord bot credentials** | Get **DISCORD_TOKEN** + **DISCORD_APP_ID** from the [Discord Developer Portal](https://discord.com/developers/applications). |
 | **Pollinations API key** | Required by the onboarding wizard. Get one at [pollinations.ai](https://pollinations.ai/). |
 
-> 💡 **New to Discord bots?** See the [Complete Setup Guide](docs/GETTING_STARTED.md).
+> 💡 **New to this?** Check out our [5-Minute Quick Start](docs/QUICKSTART.md) for a simpler guide!
+>
+> 📖 **Need screenshots?** See the [Complete Setup Guide](docs/GETTING_STARTED.md).
 
 ### 2) Install
 
@@ -405,9 +411,11 @@ npm run test
 
 | Document | Description |
 |:---------|:------------|
+| [⚡ Quick Start](docs/QUICKSTART.md) | 5-minute setup for new users |
 | [Getting Started Guide](docs/GETTING_STARTED.md) | Complete beginner walkthrough |
 | [FAQ](docs/FAQ.md) | Frequently asked questions |
 | [Configuration Reference](docs/CONFIGURATION.md) | All settings explained |
+| [Pollinations Integration](docs/POLLINATIONS.md) | How Sage uses Pollinations.ai |
 | [Security & Privacy](docs/security_privacy.md) | Data handling details |
 | [Architecture](docs/architecture/) | Technical deep-dives |
 | [Changelog](CHANGELOG.md) | Version history |

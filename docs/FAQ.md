@@ -4,6 +4,60 @@ Find answers to common questions about Sage.
 
 ---
 
+## 🌟 First Timer Questions
+
+<details>
+<summary><strong>I'm not technical — can I still use Sage?</strong></summary>
+
+**Absolutely!** We've created a [5-Minute Quick Start Guide](QUICKSTART.md) specifically for people who just want to get Sage running without diving into technical details. You'll copy and paste a few commands, and that's it!
+
+</details>
+
+<details>
+<summary><strong>Will this cost me money?</strong></summary>
+
+**Sage itself is 100% free.** Here's the breakdown:
+
+| Item | Cost |
+|:-----|:-----|
+| Sage software | Free (open source) |
+| Pollinations.ai API | Free tier available |
+| Running on your computer | Free |
+| Cloud hosting (optional) | $0-10/month if you want 24/7 uptime |
+
+Most users run Sage for free on their own computer!
+
+</details>
+
+<details>
+<summary><strong>Is this safe for my Discord server?</strong></summary>
+
+**Yes!** Here's why:
+
+- 🔒 **You control everything** — Sage runs on your computer or server
+- 🔐 **No data sold** — We don't collect or sell any information
+- 👁️ **Open source** — Anyone can review the code
+- ⚙️ **Privacy settings** — You can disable logging if you prefer
+
+See [Security & Privacy](security_privacy.md) for complete details.
+
+</details>
+
+<details>
+<summary><strong>What if I get stuck during setup?</strong></summary>
+
+Don't worry! Here are your options:
+
+1. **Run the doctor:** `npm run doctor` checks your setup
+2. **Check the troubleshooting section** below
+3. **Open an issue on GitHub** — we're happy to help!
+
+Most problems are fixed by re-running the onboarding wizard: `npm run onboard`
+
+</details>
+
+---
+
 ## 📖 About Sage
 
 <details>

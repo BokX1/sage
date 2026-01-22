@@ -11,6 +11,103 @@ const envPath = path.join(repoRoot, '.env');
 const envExamplePath = path.join(repoRoot, '.env.example');
 const dockerComposePath = path.join(repoRoot, 'docker-compose.yml');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CLI UX Helpers
+// ═══════════════════════════════════════════════════════════════════════════
+
+const TOTAL_STEPS = 5;
+let currentStep = 0;
+
+function printWelcomeBanner() {
+  console.log(`
+\x1b[32m╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║    🌿  ███████╗ █████╗  ██████╗ ███████╗  🌿                   ║
+║        ██╔════╝██╔══██╗██╔════╝ ██╔════╝                       ║
+║        ███████╗███████║██║  ███╗█████╗                         ║
+║        ╚════██║██╔══██║██║   ██║██╔══╝                         ║
+║        ███████║██║  ██║╚██████╔╝███████╗                       ║
+║        ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝                       ║
+║                                                                ║
+║               Onboarding Wizard v1.0                           ║
+║          AI-Powered Discord Bot Setup                          ║
+║                                                                ║
+║             Powered by Pollinations.ai 🐝                      ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝\x1b[0m
+`);
+}
+
+function printStep(title: string, helpUrl?: string) {
+  currentStep++;
+  console.log(`\n\x1b[36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m`);
+  console.log(`\x1b[1m📍 Step ${currentStep} of ${TOTAL_STEPS}: ${title}\x1b[0m`);
+  if (helpUrl) {
+    console.log(`\x1b[90m   ℹ️  Help: ${helpUrl}\x1b[0m`);
+  }
+  console.log(`\x1b[36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m\n`);
+}
+
+function printSuccess(message: string) {
+  console.log(`\x1b[32m✅ ${message}\x1b[0m`);
+}
+
+function printWarning(message: string) {
+  console.log(`\x1b[33m⚠️  ${message}\x1b[0m`);
+}
+
+function printError(message: string) {
+  console.log(`\x1b[31m❌ ${message}\x1b[0m`);
+}
+
+function printCompletionBanner(appId?: string) {
+  // Recommended permissions: Send Messages (2048) + Read Message History (65536) + 
+  // View Channels (1024) + Connect (1048576) + Embed Links (16384) = 1133568
+  const recommendedPerms = '1133568';
+  // Admin permission for full access
+  const adminPerms = '8';
+
+  const recommendedUrl = appId
+    ? `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot%20applications.commands&permissions=${recommendedPerms}`
+    : null;
+  const adminUrl = appId
+    ? `https://discord.com/oauth2/authorize?client_id=${appId}&scope=bot%20applications.commands&permissions=${adminPerms}`
+    : null;
+
+  console.log(`
+\x1b[32m╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║    🎉  Setup Complete! Your Sage is ready to go!  🎉           ║
+║                                                                ║
+╠════════════════════════════════════════════════════════════════╣
+║                                                                ║
+║    Next Steps:                                                 ║
+║    ───────────────────────────────────────────────             ║
+║    1. docker compose up -d db      (start database)            ║
+║    2. npm run db:migrate           (setup tables)              ║
+║    3. npm run dev                  (development mode)          ║
+║                                                                ║
+║    For Production:                                             ║
+║    ───────────────────────────────────────────────             ║
+║    • npm run build && npm start                                ║
+║                                                                ║
+║    Need help? Run: npm run doctor                              ║
+║    Docs: https://github.com/BokX1/Sage                         ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝\x1b[0m
+`);
+
+  if (recommendedUrl && adminUrl) {
+    console.log(`\x1b[36m📎 Invite Sage to your server:\x1b[0m\n`);
+    console.log(`   \x1b[1mRecommended (minimal permissions):\x1b[0m`);
+    console.log(`   ${recommendedUrl}`);
+    console.log(`\x1b[90m   → Send Messages, Read History, View Channels, Embed Links, Connect\x1b[0m\n`);
+    console.log(`   \x1b[1mAdmin (full access):\x1b[0m`);
+    console.log(`   ${adminUrl}`);
+    console.log(`\x1b[90m   → Administrator permission (8) - use if you need all features\x1b[0m\n`);
+  }
+}
+
 type CliArgs = {
   help?: boolean;
   yes?: boolean;
@@ -293,53 +390,53 @@ const writeEnvFile = (output: string) => {
   fs.writeFileSync(tempPath, output + '\n', { encoding: 'utf8', mode: 0o600 });
   fs.renameSync(tempPath, envPath);
   try {
-      fs.chmodSync(envPath, 0o600);
-    } catch {
-      // Best-effort on platforms that support chmod.
-    }
-  };
-  
-  const shouldOverwriteValue = async (
-    key: string,
-    existingValue: string | undefined,
-    prompts: PromptFns,
-    yesFlag: boolean,
-    nonInteractive: boolean,
-  ): Promise<boolean> => {
-    if (!existingValue) return true;
-    if (yesFlag) return true;
-    if (nonInteractive) return false;
-    return prompts.askYesNo(`${key} already set. Overwrite?`);
-  };
-  
-  async function main() {
-    const args = parseArgs(process.argv);
-    if (args.help) {
-      printHelp();
-      return;
-    }
-  
-    const prompts = createPrompts(!args.nonInteractive);
-  
-    process.on('SIGINT', () => {
-      console.log('\nSetup cancelled.');
-      prompts.close();
-      process.exit(1);
-    });
-  
-    try {
-      console.log('🌿 Sage Onboarding Wizard');
-    console.log('This will configure your .env file and validate Pollinations access.');
-  
+    fs.chmodSync(envPath, 0o600);
+  } catch {
+    // Best-effort on platforms that support chmod.
+  }
+};
+
+const shouldOverwriteValue = async (
+  key: string,
+  existingValue: string | undefined,
+  prompts: PromptFns,
+  yesFlag: boolean,
+  nonInteractive: boolean,
+): Promise<boolean> => {
+  if (!existingValue) return true;
+  if (yesFlag) return true;
+  if (nonInteractive) return false;
+  return prompts.askYesNo(`${key} already set. Overwrite?`);
+};
+
+async function main() {
+  const args = parseArgs(process.argv);
+  if (args.help) {
+    printHelp();
+    return;
+  }
+
+  const prompts = createPrompts(!args.nonInteractive);
+
+  process.on('SIGINT', () => {
+    console.log('\nSetup cancelled.');
+    prompts.close();
+    process.exit(1);
+  });
+
+  try {
+    printWelcomeBanner();
+    console.log('This wizard will configure your .env file and validate Pollinations access.\n');
+
     const envExists = fs.existsSync(envPath);
     const existingEnv = envExists ? parseEnv(fs.readFileSync(envPath, 'utf8')) : new Map();
     const exampleLines = fs.existsSync(envExamplePath)
       ? parseEnvExampleLines(fs.readFileSync(envExamplePath, 'utf8'))
       : [];
-  
+
     const values = new Map(existingEnv);
     const forcedKeys = new Set<string>();
-  
+
     if (args.discordToken) {
       values.set('DISCORD_TOKEN', args.discordToken);
       forcedKeys.add('DISCORD_TOKEN');
@@ -356,25 +453,25 @@ const writeEnvFile = (output: string) => {
       values.set('POLLINATIONS_API_KEY', args.apiKey);
       forcedKeys.add('POLLINATIONS_API_KEY');
     }
-  
+
     for (const key of REQUIRED_KEYS) {
       const existingValue = values.get(key);
       const overwrite = forcedKeys.has(key)
         ? true
         : await shouldOverwriteValue(
-            key,
-            existingValue,
-            prompts,
-            !!args.yes,
-            !!args.nonInteractive,
-          );
+          key,
+          existingValue,
+          prompts,
+          !!args.yes,
+          !!args.nonInteractive,
+        );
       if (!overwrite) {
         if (!existingValue) {
           throw new Error(`${key} is required in non-interactive mode.`);
         }
         continue;
       }
-  
+
       if (key === 'DATABASE_URL') {
         const dbUrl = args.databaseUrl ?? (await promptDatabaseUrl(prompts));
         values.set(key, dbUrl);
@@ -386,17 +483,17 @@ const writeEnvFile = (output: string) => {
         values.set(key, appId);
       }
     }
-  
+
     const existingApiKey = values.get('POLLINATIONS_API_KEY');
     const overwriteApiKey = forcedKeys.has('POLLINATIONS_API_KEY')
       ? true
       : await shouldOverwriteValue(
-          'POLLINATIONS_API_KEY',
-          existingApiKey,
-          prompts,
-          !!args.yes,
-          !!args.nonInteractive,
-        );
+        'POLLINATIONS_API_KEY',
+        existingApiKey,
+        prompts,
+        !!args.yes,
+        !!args.nonInteractive,
+      );
     if (overwriteApiKey) {
       const apiKey =
         args.apiKey ??
@@ -408,11 +505,11 @@ const writeEnvFile = (output: string) => {
       }
       values.set('POLLINATIONS_API_KEY', apiKey);
     }
-  
+
     if (!values.get('POLLINATIONS_API_KEY')) {
       throw new Error('POLLINATIONS_API_KEY is required.');
     }
-  
+
     for (const key of OPTIONAL_KEYS) {
       if (key === 'POLLINATIONS_MODEL') {
         if (args.model) {
@@ -420,7 +517,7 @@ const writeEnvFile = (output: string) => {
         }
       }
     }
-  
+
     const requiredEnv = {
       DISCORD_TOKEN: values.get('DISCORD_TOKEN'),
       DISCORD_APP_ID: values.get('DISCORD_APP_ID'),
@@ -428,33 +525,33 @@ const writeEnvFile = (output: string) => {
       POLLINATIONS_API_KEY: values.get('POLLINATIONS_API_KEY'),
       POLLINATIONS_MODEL: values.get('POLLINATIONS_MODEL'),
     };
-  
+
     for (const [key, value] of Object.entries(requiredEnv)) {
       if (value) process.env[key] = value;
     }
-  
+
     const { loadModelCatalog, findModelInCatalog, suggestModelIds, getModelCatalogState } =
       await import('../core/llm/modelCatalog');
-  
+
     const catalog = await loadModelCatalog();
     const sortedModels = Object.values(catalog).sort((a, b) => a.id.localeCompare(b.id));
-  
+
     const existingModel = values.get('POLLINATIONS_MODEL') || 'gemini';
     let selectedModel = existingModel;
-  
+
     if (!args.model) {
       if (!args.nonInteractive) {
-      console.log('\nSelect a default Pollinations chat model.');
-      console.log('Type "list" to view available models. Press Enter to keep current.');
+        console.log('\nSelect a default Pollinations chat model.');
+        console.log('Type "list" to view available models. Press Enter to keep current.');
       }
-  
+
       while (true) {
         if (args.nonInteractive) {
           selectedModel = existingModel;
           break;
         }
-  
-      const input = await prompts.ask(`Default chat model [${existingModel}]: `);
+
+        const input = await prompts.ask(`Default chat model [${existingModel}]: `);
         const choice = input.trim();
         if (!choice) {
           selectedModel = existingModel;
@@ -464,16 +561,16 @@ const writeEnvFile = (output: string) => {
           console.log(sortedModels.map((model) => `- ${model.id}`).join('\n'));
           continue;
         }
-  
+
         const { model: foundModel, catalog: updatedCatalog } = await findModelInCatalog(choice, {
           refreshIfMissing: true,
         });
-  
+
         if (foundModel) {
           selectedModel = foundModel.id;
           break;
         }
-  
+
         const suggestions = suggestModelIds(choice, updatedCatalog);
         const suggestionText = suggestions.length ? ` Did you mean: ${suggestions.join(', ')}?` : '';
         console.log(`Unknown model: ${choice}.${suggestionText}`);
@@ -489,9 +586,9 @@ const writeEnvFile = (output: string) => {
       }
       selectedModel = foundModel.id;
     }
-  
+
     values.set('POLLINATIONS_MODEL', selectedModel);
-  
+
     console.log('\n✅ Validating configuration...');
     const { model: finalModel } = await findModelInCatalog(selectedModel, {
       refreshIfMissing: true,
@@ -499,12 +596,12 @@ const writeEnvFile = (output: string) => {
     if (!finalModel) {
       throw new Error(`Selected model "${selectedModel}" is not available.`);
     }
-  
+
     const catalogState = getModelCatalogState();
     console.log(`- Pollinations model: ${finalModel.id}`);
     console.log(`- Catalog source: ${catalogState.source}`);
     console.log('- Pollinations API key: [PRESENT]');
-  
+
     const extraEntries: Array<[string, string]> = [];
     if (envExists) {
       const exampleKeys = new Set();
@@ -520,22 +617,17 @@ const writeEnvFile = (output: string) => {
         }
       }
     }
-  
+
     const output =
       exampleLines.length > 0
         ? buildEnvOutput(exampleLines, values, extraEntries)
         : Array.from(values.entries())
-            .map(([key, value]) => `${key}=${formatValue(value)}`)
-            .join('\n');
-  
+          .map(([key, value]) => `${key}=${formatValue(value)}`)
+          .join('\n');
+
     writeEnvFile(output);
-  
-    console.log(envExists ? '\n.env updated.' : '\n.env created.');
-    console.log('Next steps:');
-    console.log('- npm install');
-    console.log('- docker compose up -d db');
-    console.log('- npm run db:migrate');
-    console.log('- npm run dev');
+
+    printCompletionBanner(values.get('DISCORD_APP_ID'));
   } finally {
     prompts.close();
   }
