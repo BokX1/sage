@@ -108,6 +108,7 @@ describe('messageCreate - Ingest Flow', () => {
       fetchReference: vi.fn(),
       attachments: {
         first: vi.fn(() => null),
+        values: vi.fn(() => []),
       },
       channel: {
         send: vi.fn(),
@@ -215,6 +216,7 @@ describe('messageCreate - Ingest Flow', () => {
         content: 'Prior bot message',
         attachments: {
           first: vi.fn(() => null),
+          values: vi.fn(() => []),
         },
       }),
     });
@@ -236,6 +238,7 @@ describe('messageCreate - Ingest Flow', () => {
       content: 'Original question',
       attachments: {
         first: vi.fn(() => null),
+        values: vi.fn(() => []),
       },
       partial: false,
     } as unknown as Message;
@@ -267,6 +270,12 @@ describe('messageCreate - Ingest Flow', () => {
           contentType: 'image/png',
           url: 'https://cdn.example.com/image.png',
         })),
+        values: vi.fn(() => [
+          {
+            contentType: 'image/png',
+            url: 'https://cdn.example.com/image.png',
+          },
+        ]),
       },
       partial: false,
     } as unknown as Message;

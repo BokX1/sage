@@ -9,6 +9,8 @@ import { config as appConfig } from '../../config';
 import { detectInvocation } from '../../core/invoke/wakeWord';
 import { shouldAllowInvocation } from '../../core/invoke/cooldown';
 import { LLMMessageContent } from '../../core/llm/types';
+import { estimateTokens } from '../../core/agentRuntime/tokenEstimate';
+import { fetchAttachmentText, FetchAttachmentResult } from '../../utils/fileHandler';
 
 const processedMessagesKey = Symbol.for('sage.handlers.messageCreate.processed');
 const registrationKey = Symbol.for('sage.handlers.messageCreate.registered');
@@ -31,6 +33,10 @@ const IMAGE_EXTENSIONS = new Set([
   'svg',
 ]);
 
+const ATTACHMENT_CONTEXT_NOTE =
+  '(System Note: The user attached the file above. Analyze it based on their request.)';
+const TRANSCRIPT_HEADER = 'Recent channel transcript (most recent last):';
+
 function isImageAttachment(attachment?: {
   contentType?: string | null;
   name?: string | null;
@@ -49,12 +55,17 @@ function isImageAttachment(attachment?: {
 
 function buildMessageContent(
   message: Message,
-  options?: { prefix?: string; allowEmpty?: boolean; textOverride?: string },
+  options?: {
+    prefix?: string;
+    allowEmpty?: boolean;
+    textOverride?: string;
+    attachmentOverride?: { contentType?: string | null; name?: string | null; url?: string | null };
+  },
 ): LLMMessageContent | null {
   const prefix = options?.prefix ?? '';
   const text = options?.textOverride ?? message.content ?? '';
   const combinedText = `${prefix}${text}`;
-  const attachment = message.attachments?.first?.();
+  const attachment = options?.attachmentOverride ?? message.attachments?.first?.();
   const hasImage = isImageAttachment(attachment);
 
   if (!hasImage || !attachment?.url) {
@@ -69,6 +80,88 @@ function buildMessageContent(
     { type: 'text', text: textPart },
     { type: 'image_url', image_url: { url: attachment.url } },
   ];
+}
+
+function appendAttachmentToText(baseText: string, attachmentBlock: string | null): string {
+  if (!attachmentBlock) {
+    return baseText;
+  }
+  const separator = baseText.trim().length > 0 ? '\n\n' : '';
+  return `${baseText}${separator}${attachmentBlock}`;
+}
+
+function formatAttachmentBlock(
+  filename: string,
+  body: string,
+  extraNotes: string[] = [],
+): string {
+  const lines = [
+    `--- BEGIN FILE ATTACHMENT: ${filename} ---`,
+    body,
+    '--- END FILE ATTACHMENT ---',
+    ...extraNotes,
+    ATTACHMENT_CONTEXT_NOTE,
+  ];
+  return lines.filter((line) => line !== undefined && line !== null).join('\n');
+}
+
+function deriveAttachmentLimits(params: {
+  baseText: string;
+  filename: string;
+  authorDisplayName: string;
+  authorId: string;
+  timestamp: Date;
+}): { maxChars: number; maxBytes: number; headChars: number; tailChars: number } {
+  const linePrefix = `- @${params.authorDisplayName} (id:${params.authorId}) [${params.timestamp.toISOString()}]: `;
+  const transcriptMaxContent = Math.max(
+    0,
+    appConfig.CONTEXT_TRANSCRIPT_MAX_CHARS - TRANSCRIPT_HEADER.length - 1 - linePrefix.length,
+  );
+  const attachmentOverhead = formatAttachmentBlock(params.filename, '').length;
+  const remainingTranscriptChars = Math.max(
+    0,
+    transcriptMaxContent - params.baseText.length - attachmentOverhead,
+  );
+  const overheadTokens = estimateTokens(formatAttachmentBlock(params.filename, ''));
+  const availableTokens = Math.max(
+    0,
+    appConfig.CONTEXT_USER_MAX_TOKENS - estimateTokens(params.baseText) - overheadTokens,
+  );
+  const remainingBudgetChars = Math.floor(
+    availableTokens * appConfig.TOKEN_HEURISTIC_CHARS_PER_TOKEN,
+  );
+  const maxChars = Math.max(0, Math.min(remainingBudgetChars, remainingTranscriptChars));
+  const maxBytes = Math.max(0, Math.floor(maxChars * 4));
+  const headChars = Math.floor(maxChars * 0.7);
+  const tailChars = Math.max(0, maxChars - headChars);
+  return { maxChars, maxBytes, headChars, tailChars };
+}
+
+function buildAttachmentBlockFromResult(
+  filename: string,
+  result: FetchAttachmentResult,
+  contentType?: string | null,
+): string | null {
+  if (result.kind === 'skip') {
+    return null;
+  }
+
+  const notes: string[] = [];
+  if (result.kind === 'truncated') {
+    notes.push(result.message);
+  }
+
+  if (contentType?.toLowerCase().startsWith('application/octet-stream')) {
+    notes.push(
+      '(System Note: Attachment content-type was application/octet-stream; treated as text based on file extension.)',
+    );
+  }
+
+  if (result.kind === 'too_large' || result.kind === 'error') {
+    return formatAttachmentBlock(filename, result.message, notes);
+  }
+
+  return formatAttachmentBlock(filename, result.text, notes);
 }
 
 export async function handleMessageCreate(message: Message) {
@@ -129,6 +222,48 @@ export async function handleMessageCreate(message: Message) {
     ? buildMessageContent(referencedMessage, { prefix: '[In reply to]: ' })
     : null;
 
+  const attachments = Array.from(message.attachments?.values?.() ?? []);
+  const imageAttachment = attachments.find((item) => isImageAttachment(item));
+  const textAttachment = attachments.find((item) => !isImageAttachment(item));
+  const attachmentName = textAttachment?.name ?? '';
+  const attachmentContentType = textAttachment?.contentType ?? null;
+  let attachmentBlock: string | null = null;
+
+  if (textAttachment && attachmentName.trim().length > 0 && textAttachment.url) {
+    const { maxChars, maxBytes, headChars, tailChars } = deriveAttachmentLimits({
+      baseText: message.content ?? '',
+      filename: attachmentName,
+      authorDisplayName,
+      authorId: message.author.id,
+      timestamp: message.createdAt,
+    });
+
+    let attachmentResult: FetchAttachmentResult;
+    if (maxChars <= 0 || maxBytes <= 0) {
+      attachmentResult = {
+        kind: 'too_large',
+        message: `[System: File '${attachmentName}' omitted due to context limits.]`,
+      };
+    } else {
+      attachmentResult = await fetchAttachmentText(textAttachment.url, attachmentName, {
+        timeoutMs: 30_000,
+        maxBytes,
+        maxChars,
+        truncateStrategy: 'head_tail',
+        headChars,
+        tailChars,
+      });
+    }
+
+    attachmentBlock = buildAttachmentBlockFromResult(
+      attachmentName,
+      attachmentResult,
+      attachmentContentType,
+    );
+  }
+
+  const ingestContent = appendAttachmentToText(message.content ?? '', attachmentBlock);
+
   // ================================================================
   // D1: Ingest event BEFORE reply gating
   // ================================================================
@@ -139,7 +274,7 @@ export async function handleMessageCreate(message: Message) {
     messageId: message.id,
     authorId: message.author.id,
     authorDisplayName,
-    content: message.content,
+    content: ingestContent,
     timestamp: message.createdAt,
     replyToMessageId: message.reference?.messageId,
     mentionsBot: isMentioned,
@@ -219,9 +354,14 @@ export async function handleMessageCreate(message: Message) {
     }, 8000);
 
     // Generate Chat Reply
+    const userTextWithAttachments = appendAttachmentToText(
+      invocation.cleanedText,
+      attachmentBlock,
+    );
     const userContent = buildMessageContent(message, {
       allowEmpty: true,
-      textOverride: invocation.cleanedText,
+      textOverride: userTextWithAttachments,
+      attachmentOverride: imageAttachment,
     });
 
     const result = await generateChatReply({
@@ -230,8 +370,8 @@ export async function handleMessageCreate(message: Message) {
       channelId: message.channelId,
       guildId: message.guildId,
       messageId: message.id,
-      userText: invocation.cleanedText,
-      userContent: userContent ?? invocation.cleanedText,
+      userText: userTextWithAttachments,
+      userContent: userContent ?? userTextWithAttachments,
       replyToBotText: invocation.kind === 'reply' ? replyToBotText : null,
       replyReferenceContent,
       intent: invocation.intent,
