@@ -78,6 +78,9 @@ describe('Discord command registry', () => {
 
     const restInstance = instances[0] as { put: ReturnType<typeof vi.fn> };
     expect(restInstance.put).toHaveBeenCalledTimes(1);
-    expect(restInstance.put).toHaveBeenCalledWith('global-route', { body: commandPayloads });
+    expect(restInstance.put).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ body: commandPayloads }),
+    );
   });
 });

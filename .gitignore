@@ -9,6 +9,8 @@ coverage
 .DS_Store
 prisma/*.db
 prisma/*.db-journal
+prisma/migrations/
+.agent/
 /cmd.exe
 /powershell.exe
 !.env.example
