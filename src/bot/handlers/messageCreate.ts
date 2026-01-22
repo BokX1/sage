@@ -55,7 +55,18 @@ function isImageAttachment(attachment?: {
 }
 
 function getMessageAttachments(message: Message) {
-  return Array.from(message.attachments?.values?.() ?? []);
+  const attachments = message.attachments;
+  if (!attachments) {
+    return [];
+  }
+  if (typeof attachments.values === 'function') {
+    return Array.from(attachments.values());
+  }
+  if (typeof attachments.first === 'function') {
+    const first = attachments.first();
+    return first ? [first] : [];
+  }
+  return [];
 }
 
 function getImageAttachment(message: Message) {
