@@ -54,6 +54,18 @@ function isImageAttachment(attachment?: {
   return extension ? IMAGE_EXTENSIONS.has(extension) : false;
 }
 
+function getMessageAttachments(message: Message) {
+  return Array.from(message.attachments?.values?.() ?? []);
+}
+
+function getImageAttachment(message: Message) {
+  return getMessageAttachments(message).find((attachment) => isImageAttachment(attachment));
+}
+
+function getNonImageAttachment(message: Message) {
+  return getMessageAttachments(message).find((attachment) => !isImageAttachment(attachment));
+}
+
 function buildMessageContent(
   message: Message,
   options?: { prefix?: string; allowEmpty?: boolean; textOverride?: string },
@@ -61,7 +73,7 @@ function buildMessageContent(
   const prefix = options?.prefix ?? '';
   const text = options?.textOverride ?? message.content ?? '';
   const combinedText = `${prefix}${text}`;
-  const attachment = message.attachments?.first?.();
+  const attachment = getImageAttachment(message);
   const hasImage = isImageAttachment(attachment);
 
   if (!hasImage || !attachment?.url) {
@@ -218,7 +230,7 @@ export async function handleMessageCreate(message: Message) {
     ? buildMessageContent(referencedMessage, { prefix: '[In reply to]: ' })
     : null;
 
-  const attachment = message.attachments?.first?.();
+  const attachment = getNonImageAttachment(message);
   const attachmentName = attachment?.name ?? '';
   const attachmentContentType = attachment?.contentType ?? null;
   const hasImageAttachment = isImageAttachment(attachment);
