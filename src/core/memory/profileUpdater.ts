@@ -13,47 +13,47 @@ import { buildTranscriptBlock } from '../awareness/transcriptBuilder';
 // const profileUpdateLimit = limitConcurrency(2);
 
 const ANALYST_SYSTEM_PROMPT = `You are a User Intelligence Analyst.
-Your goal is to construct a **Predictive Mental Model** of the user for an LLM agent.
-Do NOT summarize the conversation. Do NOT write a diary.
+Your goal is to maintain a **Persistent Predictive Mental Model** of the user. This model is used by an LLM agent to personalize its behavior, technical depth, and communication style.
 
-Input: Previous Profile + Recent Context
-Output: A functional, goal-oriented profile.
+### CORE OPERATING PRINCIPLES:
+1. **Predictive Directives, Not Descriptive Summaries**: Do not record history. Record *instructions* derived from that history.
+    - *Bad*: "User was frustrated by long explanations."
+    - *Good*: "PROTOCOL: Extreme brevity. Deliver raw code/data first; explain only if prompted."
+2. **Intent Decoding (The 'Why')**: Look past the literal request. Identify the underlying project or goal.
+    - *XY Problem Detection*: If a user asks for a specific tool, identify the broader architecture they are trying to build.
+3. **Instructional Density**: Write for a machine. Use high-density, semicolon-delimited technical directives where possible. Avoid conversational filler.
+4. **State Evolution**: You are merging "Previous Profile" + "Recent Context".
+    - **RETAIN**: Long-term facts (e.g., "Expert in Rust", "Prefers functional programming").
+    - **UPDATE**: Active goals (e.g., "Currently migrating from REST to gRPC").
+    - **DISCARD**: Resolved intents or obsolete protocols.
 
-Core Instructions:
-1. **Predictive, Not Descriptive**: Don't say what happened. Say *how to behave* based on what happened.
-    - BAD: "User was angry about the tone."
-    - GOOD: "PROTOCOL: Avoid casual tone. Use strict professional phrasing."
-2. **Deep Intent Decoding**: Infer the user's underlying/implicit objectives. Address the *why*, not just the *what*.
-    - BAD: "User asked how to fix the error."
-    - GOOD: "OBJECTIVE: Debugging a complex race condition. Needs root cause analysis, not just a quick fix."
-    - *XY Problem Detection*: If user asks for X to do Y, record Y as the goal.
-3. **Write for an LLM**: Use high-density, functional language. The reader is an AI, not a human.
+### STRUCTURE REQUIREMENTS:
+You must output exactly three sections:
 
-Structure Requirements:
-- Organize into 3 Strict Sections:
-  1. \`### Critical Protocol\`
-     - MUST-FOLLOW communication rules (tone, format, boundaries).
-     - *Example*: "Reply style: Direct. No preamble."
-  2. \`### Active Intent & Objectives\`
-     - The high-level goals driving the user's current actions.
-     - *Example*: "Refining the memory architecture to reduce token usage."
-  3. \`### Mental Model\`
-     - User's technical context, beliefs, and known tools.
-     - *Example*: "Expert in Typescript. Values clean code over speed."
+1. \`### Critical Protocol\`
+   - Hard constraints on communication style, formatting, and behavioral boundaries.
+   - *Example*: "Tone: Terse/Technical; No conversational fillers; Always include Big-O complexity for algorithms."
 
-Anti-Patterns (STRICTLY FORBIDDEN):
-- **NO CHRONOLOGY**: Never use "First... Then...".
-- **NO DIARY**: Never use "User asked...", "User said...".
-- **NO REDUNDANCY**: If a protocol is established, do not repeat it.
-- **NO FLUFF**: No "User seems to be...", "It appears that...". Be absolute.
+2. \`### Active Intent & Objectives\`
+   - The "Live" mission. What is the user trying to achieve in this specific session/project?
+   - *Example*: "Refactoring the auth middleware to support multi-tenancy; prioritizing security over latency."
 
-Input Handling:
-- **Consolidation**: Merge new insights into existing bullets. Keep the list short/dense.
-- **Conflict Resolution**: New Protocol overrides Old Protocol.
-- **Empty State**: Write "(None)" if unknown.
-- **Data Context**: Input history is Chronological (Oldest -> Newest). "Latest Interaction" is the most recent event.
+3. \`### Mental Model & Context\`
+   - The user's technical stack, knowledge level, and established beliefs.
+   - *Example*: "Stack: TypeScript, PostgreSQL, AWS Lambda. Knowledge: Expert-level architecture, intermediate-level DevOps. Belief: Prefers Composition over Inheritance."
 
-Output the FULL profile text.`;
+### STRICT ANTI-PATTERNS (FORBIDDEN):
+- **NO CHRONOLOGY**: Never use temporal markers like "Recently," "Currently," or "Now."
+- **NO NARRATIVE**: Avoid "The user wants," "The user is." Use direct imperatives.
+- **NO REPETITION**: If a rule exists in Protocol, do not mention it in Mental Model.
+- **NO UNCERTAINTY**: Do not use "appears to," "seems," or "likely." State observations as functional facts.
+
+### INPUT HANDLING:
+- Context is chronological (top = oldest).
+- If the "Previous Profile" contains information that is contradicted by "Latest Interaction," the latest information takes precedence.
+- If no information exists for a section, write "(None)".
+
+Output the FULL updated profile text.`;
 
 /**
  * FORMATTER SYSTEM PROMPT
@@ -152,12 +152,33 @@ export async function updateProfileSummary(params: {
       const recentMessages = getRecentMessages({
         guildId,
         channelId,
-        limit: 15, // Context window size
+        limit: 15,
       });
-      // Ensure the latest interaction is included if not yet in buffer (race condition safety)
-      // Note: Ring buffer usually updates immediately, but just in case.
 
-      const recentHistory = buildTranscriptBlock(recentMessages, 4000) || '';
+      // ========================================
+      // STRICT DEDUPLICATION
+      // ========================================
+      // We inject (userMessage, assistantReply) explicitly as "Latest Interaction".
+      // We must remove them from "recentMessages" if they exist there to prevent double-vision.
+      const historyMessages = [...recentMessages];
+
+      // 1. Check/Remove Assistant Reply (if it made it to the buffer)
+      if (historyMessages.length > 0) {
+        const last = historyMessages[historyMessages.length - 1];
+        if (last.content.trim() === assistantReply.trim()) {
+          historyMessages.pop();
+        }
+      }
+
+      // 2. Check/Remove User Message (if it made it to the buffer)
+      if (historyMessages.length > 0) {
+        const last = historyMessages[historyMessages.length - 1];
+        if (last.content.trim() === userMessage.trim()) {
+          historyMessages.pop();
+        }
+      }
+
+      const recentHistory = buildTranscriptBlock(historyMessages, 4000) || '';
 
       // ========================================
       // STEP 1: ANALYST (Outputs Updated Summary)
@@ -223,7 +244,7 @@ Latest Interaction (Focus):
 User: ${userMessage}
 Assistant: ${assistantReply}
 
-(Note: The latest interaction is shown above for focus, but is also the most recent entry in the history. Do not log it as a separate or duplicate event.)
+(Note: The interaction above is the LATEST event and is NOT included in the "Recent Conversation History" block.)
 
 Output the updated summary:`;
 
