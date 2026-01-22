@@ -50,6 +50,19 @@ export type ToolValidationResult<TArgs = unknown> =
   | { success: false; error: string };
 
 /**
+ * Describe the outcome of a tool execution attempt.
+ *
+ * Details: successful executions include a result; failures include a structured
+ * error type for auditing and fallback behavior.
+ *
+ * Side effects: none.
+ * Error behavior: none.
+ */
+export type ToolExecutionResult =
+  | { success: true; result: unknown }
+  | { success: false; error: string; errorType: 'validation' | 'execution' };
+
+/**
  * Describe a tool in OpenAI-compatible JSON schema format.
  *
  * Details: used to advertise registered tools to LLM providers.
@@ -238,10 +251,10 @@ export class ToolRegistry {
   async executeValidated<TArgs = unknown>(
     call: { name: string; args: unknown },
     ctx: ToolExecutionContext,
-  ): Promise<{ success: true; result: unknown } | { success: false; error: string }> {
+  ): Promise<ToolExecutionResult> {
     const validation = this.validateToolCall<TArgs>(call);
     if (!validation.success) {
-      return { success: false, error: validation.error };
+      return { success: false, error: validation.error, errorType: 'validation' };
     }
 
     const tool = this.tools.get(call.name)!;
@@ -250,7 +263,11 @@ export class ToolRegistry {
       return { success: true, result };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return { success: false, error: `Tool execution failed: ${message}` };
+      return {
+        success: false,
+        error: `Tool execution failed: ${message}`,
+        errorType: 'execution',
+      };
     }
   }
 }
