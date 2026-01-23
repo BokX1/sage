@@ -35,7 +35,7 @@ Before starting Sage, verify:
 | Check | Command/Action | Expected Result |
 |:------|:---------------|:----------------|
 | Docker running | Open Docker Desktop | Green "Running" status |
-| Database up | `docker compose up -d db` | Container starts |
+| Database up | `docker compose -f config/ci/docker-compose.yml up -d db` | Container starts |
 | Config valid | `npm run doctor` | All checks pass |
 | Token correct | Check `.env` file | No spaces/quotes in token |
 
@@ -64,7 +64,7 @@ Before starting Sage, verify:
 
 | Variable | When to Use |
 |:---------|:------------|
-| `POLLINATIONS_API_KEY` | Required for onboarding; higher rate limits |
+| `POLLINATIONS_API_KEY` | Optional global key (or use `/sage key set` per server) |
 | `ADMIN_USER_IDS` | To enable admin commands |
 | `LOG_LEVEL=debug` | When troubleshooting |
 
@@ -97,8 +97,8 @@ npm run db:studio
 ⚠️ **Warning:** This deletes all data!
 
 ```bash
-docker compose down -v   # Remove containers and volumes
-docker compose up -d db  # Start fresh database
+docker compose -f config/ci/docker-compose.yml down -v   # Remove containers and volumes
+docker compose -f config/ci/docker-compose.yml up -d db  # Start fresh database
 npm run db:migrate       # Recreate tables
 ```
 
@@ -190,7 +190,7 @@ Restarting Sage is always safe:
 **Check:**
 
 1. Is Docker Desktop running?
-2. Is the database container up? Run: `docker compose up -d db`
+2. Is the database container up? Run: `docker compose -f config/ci/docker-compose.yml up -d db`
 3. Wait 10 seconds for database to initialize
 
 ### "Invalid token"

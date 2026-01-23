@@ -27,13 +27,13 @@ jobs:
       run: npm ci
 
     - name: Lint
-      run: npx eslint src --config eslint.config.mjs
+      run: npm run lint
 
     - name: Build
-      run: npx tsc -p config/ci/tsconfig.json
+      run: npm run build
 
     - name: Test
-      run: npx vitest run -c config/ci/vitest.config.mjs
+      run: npm run test
       env:
         NODE_ENV: test
         DISCORD_TOKEN: test-token-for-ci

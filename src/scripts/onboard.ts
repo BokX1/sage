@@ -10,6 +10,7 @@ const repoRoot = process.cwd();
 const envPath = path.join(repoRoot, '.env');
 const envExamplePath = path.join(repoRoot, '.env.example');
 const dockerComposePath = path.join(repoRoot, 'docker-compose.yml');
+const dockerComposeFallbackPath = path.join(repoRoot, 'config', 'ci', 'docker-compose.yml');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CLI UX Helpers
@@ -60,7 +61,7 @@ function printCompletionBanner(appId?: string) {
 ║                                                                ║
 ║    Next Steps:                                                 ║
 ║    ───────────────────────────────────────────────             ║
-║    1. docker compose up -d db      (start database)            ║
+║    1. docker compose -f config/ci/docker-compose.yml up -d db  ║
 ║    2. npm run db:migrate           (setup tables)              ║
 ║    3. npm run dev                  (development mode)          ║
 ║                                                                ║
@@ -147,7 +148,7 @@ function parseArgs(argv: string[]): CliArgs {
 }
 
 function printHelp() {
-  console.log(`Sage Onboarding Wizard\n\nUsage:\n  npm run onboard -- [options]\n\nOptions:\n  --discord-token <token>   Discord bot token\n  --discord-app-id <id>     Discord application ID\n  --database-url <url>      PostgreSQL connection string\n  --api-key <key>           Pollinations API key (required)\n  --model <id>              Default Pollinations model ID\n  --yes                     Overwrite existing values without prompting\n  --non-interactive         Fail if required values are missing\n  -h, --help                Show this help\n`);
+  console.log(`Sage Onboarding Wizard\n\nUsage:\n  npm run onboard -- [options]\n\nOptions:\n  --discord-token <token>   Discord bot token\n  --discord-app-id <id>     Discord application ID\n  --database-url <url>      PostgreSQL connection string\n  --api-key <key>           Pollinations API key (optional global key)\n  --model <id>              Default Pollinations model ID\n  --yes                     Overwrite existing values without prompting\n  --non-interactive         Fail if required values are missing\n  -h, --help                Show this help\n`);
 }
 
 function createPrompts(enabled: boolean): PromptFns {
@@ -270,10 +271,16 @@ const parseEnv = (content: string) => {
 const parseEnvExampleLines = (content: string) => content.split(/\r?\n/);
 
 const getDockerComposeDefaults = () => {
-  if (!fs.existsSync(dockerComposePath)) {
+  const composePath = fs.existsSync(dockerComposePath)
+    ? dockerComposePath
+    : fs.existsSync(dockerComposeFallbackPath)
+      ? dockerComposeFallbackPath
+      : null;
+
+  if (!composePath) {
     return null;
   }
-  const content = fs.readFileSync(dockerComposePath, 'utf8');
+  const content = fs.readFileSync(composePath, 'utf8');
   const user = content.match(/POSTGRES_USER:\s*([^\s]+)/)?.[1] ?? 'postgres';
   const password = content.match(/POSTGRES_PASSWORD:\s*([^\s]+)/)?.[1] ?? 'postgres';
   const db = content.match(/POSTGRES_DB:\s*([^\s]+)/)?.[1] ?? 'sage';
@@ -403,7 +410,7 @@ async function main() {
 
   try {
     printWelcomeBanner();
-    console.log('This wizard will configure your .env file and validate Pollinations access.\n');
+    console.log('This wizard will configure your .env file and validate Pollinations settings.\n');
 
     const envExists = fs.existsSync(envPath);
     const existingEnv = envExists ? parseEnv(fs.readFileSync(envPath, 'utf8')) : new Map();
@@ -462,29 +469,29 @@ async function main() {
     }
 
     const existingApiKey = values.get('POLLINATIONS_API_KEY');
-    const overwriteApiKey = forcedKeys.has('POLLINATIONS_API_KEY')
-      ? true
-      : await shouldOverwriteValue(
-        'POLLINATIONS_API_KEY',
-        existingApiKey,
-        prompts,
-        !!args.yes,
-        !!args.nonInteractive,
-      );
-    if (overwriteApiKey) {
-      const apiKey =
-        args.apiKey ??
-        (await prompts.promptSecret(
-          'Pollinations API key (required, get one at https://pollinations.ai/): ',
-        ));
-      if (!apiKey) {
-        throw new Error('POLLINATIONS_API_KEY is required.');
+    if (args.apiKey) {
+      values.set('POLLINATIONS_API_KEY', args.apiKey);
+      forcedKeys.add('POLLINATIONS_API_KEY');
+    } else if (!args.nonInteractive) {
+      const overwriteApiKey = forcedKeys.has('POLLINATIONS_API_KEY')
+        ? true
+        : await shouldOverwriteValue(
+          'POLLINATIONS_API_KEY',
+          existingApiKey,
+          prompts,
+          !!args.yes,
+          !!args.nonInteractive,
+        );
+      if (overwriteApiKey) {
+        const apiKey = await prompts.promptSecret(
+          'Pollinations API key (optional, press Enter to skip): ',
+        );
+        if (apiKey) {
+          values.set('POLLINATIONS_API_KEY', apiKey);
+        } else {
+          values.delete('POLLINATIONS_API_KEY');
+        }
       }
-      values.set('POLLINATIONS_API_KEY', apiKey);
-    }
-
-    if (!values.get('POLLINATIONS_API_KEY')) {
-      throw new Error('POLLINATIONS_API_KEY is required.');
     }
 
     for (const key of OPTIONAL_KEYS) {
@@ -577,7 +584,9 @@ async function main() {
     const catalogState = getModelCatalogState();
     console.log(`- Pollinations model: ${finalModel.id}`);
     console.log(`- Catalog source: ${catalogState.source}`);
-    console.log('- Pollinations API key: [PRESENT]');
+    console.log(
+      `- Pollinations API key: ${values.get('POLLINATIONS_API_KEY') ? '[PRESENT]' : '[NOT SET]'}`,
+    );
 
     const extraEntries: Array<[string, string]> = [];
     if (envExists) {

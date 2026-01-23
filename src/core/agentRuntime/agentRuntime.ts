@@ -149,15 +149,15 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
     }));
   }
 
-  // Get API key for router LLM call
-  const routerApiKey = guildId ? await getGuildApiKey(guildId) : undefined;
+  const guildApiKey = guildId ? await getGuildApiKey(guildId) : undefined;
+  const apiKey = guildApiKey ?? appConfig.POLLINATIONS_API_KEY;
 
   const route = await decideRoute({
     userText,
     invokedBy,
     hasGuild: !!guildId,
     conversationHistory,
-    apiKey: routerApiKey,
+    apiKey,
   });
 
   logger.debug({ traceId, route }, 'Router decision');
@@ -291,15 +291,11 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
 
   const client = getLLMClient();
 
-  // Strict BYOP: Enforce Guild Key
-  let apiKey: string | undefined;
-  if (guildId) {
-    apiKey = await getGuildApiKey(guildId);
-    if (!apiKey) {
-      return {
-        replyText: getWelcomeMessage(),
-      };
-    }
+  // Enforce BYOP if neither a guild key nor a global key is configured.
+  if (guildId && !apiKey) {
+    return {
+      replyText: getWelcomeMessage(),
+    };
   }
 
   const nativeTools: ToolDefinition[] = [];

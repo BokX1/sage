@@ -59,10 +59,12 @@ Run the interactive wizard:
 npm run onboard
 ```
 
+> ℹ️ The wizard can set a global `POLLINATIONS_API_KEY`. If you skip it, run `/sage key set` later to activate per server.
+
 ### 4. Start
 
 ```bash
-docker compose up -d db
+docker compose -f config/ci/docker-compose.yml up -d db
 npm run db:migrate
 npm run dev
 ```

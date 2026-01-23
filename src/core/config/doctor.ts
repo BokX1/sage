@@ -57,7 +57,7 @@ export async function runConfigDoctor() {
     if (c.sensitive) {
       // Never print actual key value
       if ('present' in c) {
-        value = c.present ? '[PRESENT]' : '[NOT SET - REQUIRED FOR ONBOARDING]';
+        value = c.present ? '[PRESENT]' : '[NOT SET - CONFIGURE A GLOBAL OR SERVER KEY]';
       } else {
         value = c.valid ? '[PRESENT]' : '[MISSING]';
       }

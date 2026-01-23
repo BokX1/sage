@@ -146,7 +146,7 @@ The wizard will ask you for:
 | **DISCORD_TOKEN** | Paste the bot token from Step 2.3 |
 | **DISCORD_APP_ID** | Paste the Application ID from Step 2.2 |
 | **DATABASE_URL** | Type `2` to use the Docker default |
-| **POLLINATIONS_API_KEY** | Required — get one at [pollinations.ai](https://pollinations.ai/) |
+| **POLLINATIONS_API_KEY** | Optional — set a global key or leave blank to use `/sage key set` per server |
 | **POLLINATIONS_MODEL** | Choose a default chat model from the list |
 
 > ✅ `npm run setup` is kept as a legacy alias for the onboarding wizard.
@@ -164,6 +164,8 @@ npm run onboard -- \
   --non-interactive
 ```
 
+> ℹ️ `--api-key` is optional. If you skip it, set a server key later with `/sage key set`.
+
 ---
 
 ## Step 4: Start the Database
@@ -171,7 +173,7 @@ npm run onboard -- \
 Make sure Docker Desktop is running, then:
 
 ```bash
-docker compose up -d db
+docker compose -f config/ci/docker-compose.yml up -d db
 ```
 
 **What this does:** Starts a PostgreSQL database in the background.

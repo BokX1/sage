@@ -46,7 +46,7 @@ If you are self-hosting, you can set defaults in `.env`:
 
 ```env
 POLLINATIONS_MODEL=gemini
-# POLLINATIONS_API_KEY is not used for guild chats in Strict BYOP mode.
+# POLLINATIONS_API_KEY provides a global fallback if a server key is not set.
 ```
 
 ### Advanced Model Configuration
