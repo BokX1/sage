@@ -261,7 +261,7 @@ export async function handleMessageCreate(message: Message) {
           if (connection && connection.joinConfig.channelId === message.member.voice.channelId) {
             loggerWithTrace.info({ guildId: message.guildId }, 'Generating TTS (syncing)...');
             // Await speech generation + start of playback BEFORE sending text
-            await voiceManager.speak(message.guildId, result.replyText);
+            await voiceManager.speak(message.guildId, result.replyText, result.styleHint);
             loggerWithTrace.info('TTS started, sending text reply.');
           }
         } catch (voiceErr) {

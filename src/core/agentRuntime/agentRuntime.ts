@@ -76,6 +76,7 @@ export interface RunChatTurnParams {
  */
 export interface RunChatTurnResult {
   replyText: string;
+  styleHint?: string;
   debug?: {
     toolsExecuted?: boolean;
     toolLoopResult?: ToolCallLoopResult;
@@ -268,7 +269,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
   }
 
   const style = classifyStyle(userText);
-  // Analyze mimicry from conversation history (user messages only)
+  // Calculate style mimicry for TTS usage (passed out in result)
   const userHistory = conversationHistory
     .filter(m => m.role === 'user')
     .map(m => typeof m.content === 'string' ? m.content : '');
@@ -286,7 +287,6 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
     intentHint: intent ?? null,
     relationshipHints: relationshipHintsText,
     style,
-    styleMimicry,
     expertPackets: expertPacketsText || null,
     invokedBy,
   });
@@ -395,6 +395,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
 
   return {
     replyText: governorResult.finalText,
+    styleHint: styleMimicry, // Pass style hint out for TTS
     debug: { messages, toolsExecuted },
   };
 }

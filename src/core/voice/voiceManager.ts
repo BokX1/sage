@@ -37,7 +37,7 @@ export class VoiceManager extends EventEmitter {
     return VoiceManager.instance;
   }
 
-  public async speak(guildId: string, text: string): Promise<void> {
+  public async speak(guildId: string, text: string, styleDescription?: string): Promise<void> {
     const connection = this.connections.get(guildId);
     if (!connection) return;
 
@@ -51,15 +51,21 @@ export class VoiceManager extends EventEmitter {
     }
 
     try {
-      logger.info({ guildId, textPreview: text.slice(0, 30) }, 'Generating TTS...');
+      logger.info({ guildId, textPreview: text.slice(0, 30), style: styleDescription }, 'Generating TTS...');
       const llm = getLLMClient();
+      
+      let ttsPrompt = `Read this text naturally: "${text}"`;
+      if (styleDescription) {
+        ttsPrompt = `You are a lively voice assistant. Read this text with a ${styleDescription} tone: "${text}"`;
+      }
+
       const response = await llm.chat({
         model: 'openai-audio',
         apiKey: effectiveKey,
         messages: [
           {
             role: 'user',
-            content: `Read this text naturally: "${text}"`,
+            content: ttsPrompt,
           },
         ],
       });

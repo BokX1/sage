@@ -36,7 +36,7 @@ export async function generateChatReply(params: {
   intent?: string | null;
   mentionedUserIds?: string[];
   invokedBy?: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
-}): Promise<{ replyText: string }> {
+}): Promise<{ replyText: string; styleHint?: string }> {
   // Enforce sequential processing per user
   const limit = limitByKey(params.userId, 1);
 
@@ -132,6 +132,6 @@ export async function generateChatReply(params: {
       }
     }
 
-    return { replyText };
+    return { replyText, styleHint: result.styleHint };
   });
 }
