@@ -26,6 +26,7 @@ Sage uses different Pollinations models for specialized tasks:
 | **Profile Analysis** | `deepseek` | Building user memory profiles |
 | **Summaries** | `openai-large` | Creating channel conversation summaries |
 | **JSON Formatting** | `qwen-coder` | Structured data extraction |
+| **Voice** | `openai-audio` | Text-to-speech companion responses |
 
 ---
 
@@ -93,6 +94,12 @@ Or browse models at [pollinations.ai](https://pollinations.ai/).
 - Analyze images shared in Discord
 - Discuss visual content
 - Multi-modal conversations
+
+### Voice Synthesis (TTS)
+
+- Text-to-speech companion responses
+- Dynamic persona adaptation
+- Expressive audio output
 
 ### Structured Output
 
