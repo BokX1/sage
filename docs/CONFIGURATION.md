@@ -30,7 +30,7 @@ Sage uses an intelligent agentic architecture with specialized models for differ
 | `LLM_PROVIDER` | AI provider | `pollinations` |
 | `POLLINATIONS_BASE_URL` | API endpoint URL | `https://gen.pollinations.ai/v1` |
 | `POLLINATIONS_MODEL` | Primary chat model (ensure this is a vision-capable model like `gemini` for image support) | `gemini` |
-| `POLLINATIONS_API_KEY` | Your Pollinations API key (required for guild chats) | *(empty)* |
+| `POLLINATIONS_API_KEY` | Optional global API key (if unset, admins must run `/sage key set` per server) | *(empty)* |
 
 ### Specialized System Models
 
@@ -205,11 +205,11 @@ Configure administrator permissions.
 DISCORD_TOKEN=your_bot_token_here
 DISCORD_APP_ID=your_app_id_here
 DATABASE_URL=postgresql://postgres:password@localhost:5432/sage?schema=public
-POLLINATIONS_API_KEY=sk_...
 
 # =============================================================================
 # Recommended
 # =============================================================================
+POLLINATIONS_API_KEY=sk_... # Optional global key (or use /sage key set per server)
 AUTOPILOT_MODE=manual
 PROFILE_UPDATE_INTERVAL=5
 WAKE_WORDS=sage

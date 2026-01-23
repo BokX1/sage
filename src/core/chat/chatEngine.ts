@@ -87,7 +87,7 @@ export async function generateChatReply(params: {
 
     // 3. Update Profile (Background, Throttled)
     // Only trigger profile update every PROFILE_UPDATE_INTERVAL messages
-    const apiKey = guildId ? await getGuildApiKey(guildId) : undefined;
+    const apiKey = (guildId ? await getGuildApiKey(guildId) : undefined) ?? config.POLLINATIONS_API_KEY;
 
     if (apiKey) {
       // Increment interaction count

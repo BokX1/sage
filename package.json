@@ -15,10 +15,10 @@
   ],
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
-    "build": "tsc",
+    "build": "tsc -p config/ci/tsconfig.json",
     "start": "node dist/index.js",
     "lint": "eslint src",
-    "test": "vitest run",
+    "test": "vitest run -c config/ci/vitest.config.mjs",
     "setup": "ts-node src/scripts/onboard.ts",
     "onboard": "ts-node src/scripts/onboard.ts",
     "db:migrate": "prisma migrate dev",
