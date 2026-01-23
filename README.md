@@ -9,7 +9,7 @@
   <a href="https://pollinations.ai"><img src="https://img.shields.io/badge/Built%20with-Pollinations.ai-8a2be2?style=for-the-badge&logo=data:image/svg+xml,%3Csvg%20xmlns%3D%22http://www.w3.org/2000/svg%22%20viewBox%3D%220%200%20124%20124%22%3E%3Ccircle%20cx%3D%2262%22%20cy%3D%2262%22%20r%3D%2262%22%20fill%3D%22%23ffffff%22/%3E%3C/svg%3E&logoColor=white&labelColor=6a0dad" alt="Built with Pollinations" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-ISC-blue?style=for-the-badge" alt="License" /></a>
   <a href="https://github.com/BokX1/Sage/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/BokX1/Sage/ci.yml?style=for-the-badge&label=Build" alt="CI Status" /></a>
-  <img src="https://img.shields.io/badge/Version-1.1.0-green?style=for-the-badge" alt="Version" />
+  <img src="https://img.shields.io/badge/Version-1.0.0-green?style=for-the-badge" alt="Version" />
 </p>
 
 <p align="center">
@@ -63,11 +63,11 @@ graph TD
 | Feature | Description |
 |:--------|:------------|
 | 🧠 **Agentic Memory** | Builds long-term preferences and throttles updates for efficiency |
-| 👁️ **Vision Support** | analyzed and discusses images shared in chat |
-| 📄 **File Analysis** | share `.ts`, `.py`, `.txt` files for instant review or discussion |
+| 👁️ **Vision Support** | Analyzes and discusses images shared in chat |
+| 📄 **File Analysis** | Share `.ts`, `.py`, `.txt` files for instant review or discussion |
 | 🎤 **Voice Insights** | Tracks presence and duration, translating raw data into natural language |
 | 🤝 **Social Graph** | Visualizes relationship tiers and interaction patterns with emojis |
-| 🚀 **Self-Correcting** | autonomous tool loop with error recovery for high reliability |
+| 🚀 **Self-Correcting** | Autonomous tool loop with error recovery for high reliability |
 | ⚡ **Powered by Pollinations.ai** | Fast, high-throughput multi-model AI access |
 
 ---
@@ -126,8 +126,29 @@ See [Configuration Reference](docs/CONFIGURATION.md) for full details.
 
 | Document | Description |
 |:---------|:------------|
+| [📚 Documentation Hub](docs/README.md) | **Start here** — Complete navigation index |
 | [⚡ Quick Start](docs/QUICKSTART.md) | 5-minute setup for new users |
-| [Getting Started Guide](docs/GETTING_STARTED.md) | Complete beginner walkthrough |
-| [FAQ](docs/FAQ.md) | Frequently asked questions |
-| [Configuration Reference](docs/CONFIGURATION.md) | All settings explained |
-| [Architecture](docs/architecture/) | **Updated** Technical deep-dives (Routing, Experts, Loop) |
+| [📖 Getting Started](docs/GETTING_STARTED.md) | Complete beginner walkthrough |
+| [🎮 Commands](docs/COMMANDS.md) | Full slash command reference |
+| [❓ FAQ](docs/FAQ.md) | Frequently asked questions |
+| [🔧 Troubleshooting](docs/TROUBLESHOOTING.md) | Error resolution guide |
+| [⚙️ Configuration](docs/CONFIGURATION.md) | All settings explained |
+| [🤖 Agentic Architecture](docs/AGENTIC_ARCHITECTURE.md) | What makes Sage different |
+| [🏗️ Architecture](docs/architecture/) | Technical deep-dives |
+| [🔒 Security & Privacy](docs/security_privacy.md) | Data handling and privacy |
+| [🐝 Pollinations](docs/POLLINATIONS.md) | AI provider details |
+| [📋 Operations](docs/operations/runbook.md) | Deployment guide |
+
+---
+
+## 💚 Why Choose Sage?
+
+| Feature | Traditional Bots | Sage |
+|:--------|:-----------------|:-----|
+| **Memory** | Forgets after each message | Remembers and learns over time |
+| **Social Awareness** | Treats all users the same | Understands relationships and vibes |
+| **Context** | Limited to current message | Full conversation + user history |
+| **Error Recovery** | Fails silently | Self-corrects with retry loops |
+| **Adaptation** | Static responses | Evolves with your community |
+
+[Learn more about Sage's Agentic Architecture →](docs/AGENTIC_ARCHITECTURE.md)

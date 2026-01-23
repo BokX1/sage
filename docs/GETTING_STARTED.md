@@ -236,9 +236,22 @@ npm run dev
 2. Paste it in your browser
 3. Select your server and click **Authorize**
 
----
+## Step 7: Activate Your API Key
 
-1. Run `/sage key set <your_key>`.
+Once Sage is in your server, you need to set up your Pollinations API key:
+
+### 7.1 Get Your API Key
+
+1. Run `/sage key login` in any channel
+2. Click the link to log in at Pollinations
+3. After logging in, copy the `sk_...` key from the URL
+
+### 7.2 Set the Server Key
+
+1. Run `/sage key set <your_key>` (replace with your actual key)
+2. Sage will confirm the key is valid and show your account info
+
+> 💡 **Need a key?** The `/sage key login` command provides step-by-step instructions.
 
 Once set, Sage will wake up and be ready to chat! It will greet you with a friendly message explaining its unique "getting to know you" features.
 
@@ -259,7 +272,7 @@ Make sure everything is working:
 
 1. Check the terminal for error messages
 2. Run `npm run doctor` to diagnose issues
-3. See [Troubleshooting](../README.md#-troubleshooting)
+3. See [Troubleshooting](TROUBLESHOOTING.md)
 
 ---
 
@@ -322,6 +335,6 @@ Consider hosting on:
 ## 🆘 Need Help?
 
 - Check the [FAQ](FAQ.md) for common questions
-- See the [Troubleshooting Guide](../README.md#-troubleshooting)
+- See the [Troubleshooting Guide](TROUBLESHOOTING.md)
 - Run `npm run doctor` for diagnostics
 - Open an issue on [GitHub](https://github.com/BokX1/Sage/issues)
