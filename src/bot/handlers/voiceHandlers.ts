@@ -2,12 +2,21 @@ import { VoiceManager } from '../../core/voice/voiceManager';
 import { logger } from '../../utils/logger';
 import { getLLMClient } from '../../core/llm';
 import { Readable } from 'stream';
+import { config } from '../../core/config/env';
 
 export function registerVoiceEventHandlers() {
   const voiceManager = VoiceManager.getInstance();
 
-  voiceManager.on('audio_input', async ({ guildId, userId, audioBuffer, format }) => {
+  voiceManager.on('audio_input', async ({ guildId, userId, audioBuffer }) => {
     logger.info({ guildId, userId, size: audioBuffer.length }, 'Received audio input');
+
+    if (!config.pollinationsApiKey) {
+      logger.warn(
+        { guildId, userId },
+        'Missing POLLINATIONS_API_KEY. Voice chat requires a paid plan or valid key for the openai-audio model.',
+      );
+      return;
+    }
 
     try {
       const llm = getLLMClient();
@@ -28,13 +37,7 @@ export function registerVoiceEventHandlers() {
                 type: 'input_audio',
                 input_audio: {
                   data: base64Audio,
-                  format: 'wav', // The Pollinations/OpenAI API expects 'wav' or 'mp3', we are sending OggOpus which might be an issue.
-                                 // Ideally we should transcode to WAV/PCM or MP3. 
-                                 // But 'format' in the type I added says 'wav' | 'mp3'.
-                                 // The OggOpus stream we created in VoiceManager might not be directly compatible if the API expects raw WAV.
-                                 // For now, I'll claim it's 'wav' but this is a RISK.
-                                 // If the API strictly checks headers, it will fail.
-                                 // Realistically, we need ffmpeg to convert OggOpus to WAV.
+                  format: 'wav', 
                 },
               },
             ],
