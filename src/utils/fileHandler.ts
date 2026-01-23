@@ -73,10 +73,10 @@ function formatLimitNotice(maxBytes: number, maxChars?: number): string {
 }
 
 function resolveMaxBytes(options: Partial<FetchAttachmentTextOptions>): number {
-  if (typeof options.maxBytes === 'number') {
+  if (typeof options.maxBytes === 'number' && Number.isFinite(options.maxBytes)) {
     return options.maxBytes;
   }
-  if (typeof options.maxChars === 'number') {
+  if (typeof options.maxChars === 'number' && Number.isFinite(options.maxChars)) {
     return Math.floor(options.maxChars * 4);
   }
   return 0;
@@ -86,10 +86,10 @@ function resolveMaxChars(
   options: Partial<FetchAttachmentTextOptions>,
   fallback: number,
 ): number | undefined {
-  if (typeof options.maxChars === 'number') {
+  if (typeof options.maxChars === 'number' && Number.isFinite(options.maxChars)) {
     return options.maxChars;
   }
-  if (fallback > 0) {
+  if (Number.isFinite(fallback) && fallback > 0) {
     return fallback;
   }
   return undefined;
