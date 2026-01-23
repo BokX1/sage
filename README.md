@@ -54,7 +54,11 @@ graph TD
     
     Context --> LLM[LLM Brain]
     LLM -- "Tools/Reply" --> Sage
+    
     Sage -- "Chat Response" --> User
+    Sage -- "Voice Trigger" --> TTS[TTS Generator]
+    TTS -- "Audio Output" --> VC[Voice Channel]
+    VC -.-> User
 ```
 
 ---
