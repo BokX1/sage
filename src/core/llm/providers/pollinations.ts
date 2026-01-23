@@ -21,6 +21,8 @@ interface PollinationsPayload {
   response_format?: { type: 'json_object' };
   tools?: ToolDefinition[];
   tool_choice?: string | object;
+  modalities?: string[];
+  audio?: { voice: string; format: string };
 }
 
 export class PollinationsClient implements LLMClient {
@@ -114,6 +116,12 @@ export class PollinationsClient implements LLMClient {
       tools: request.tools,
       tool_choice: request.toolChoice,
     };
+
+    // Special handling for openai-audio model
+    if (model === 'openai-audio') {
+      payload.modalities = ['text', 'audio'];
+      payload.audio = { voice: 'alloy', format: 'wav' };
+    }
 
     // WORKAROUND: Gemini/Vertex AI crashes if both tools and response_format='json_object' are sent.
     // We detect this case, disable API-level JSON mode, and enforce it via system prompt instead.
@@ -237,15 +245,18 @@ export class PollinationsClient implements LLMClient {
         }
 
         const data = (await response.json()) as {
-          choices?: { message?: { content?: string } }[];
+          choices?: { message?: { content?: string; audio?: any } }[];
           usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
         };
-        const content = data.choices?.[0]?.message?.content || '';
+        const message = data.choices?.[0]?.message;
+        const content = message?.content || '';
+        const audio = message?.audio;
 
-        logger.debug({ usage: data.usage }, '[Pollinations] Success');
+        logger.debug({ usage: data.usage, hasAudio: !!audio }, '[Pollinations] Success');
 
         return {
           content,
+          audio,
           usage: data.usage
             ? {
               promptTokens: data.usage.prompt_tokens,
