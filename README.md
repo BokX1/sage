@@ -73,42 +73,36 @@ graph TD
 
 ---
 
-## 🚀 Quick Start
+## 🎤 Voice Companion (Beta)
 
-### Option 1: Use the Public Bot (Recommended)
+Sage can now join your voice channel and speak to you!
 
-**Zero coding required.** Just invite the bot and bring your own API key (BYOP).
+**How it works (Text-in, Voice-out):**
+1.  **Join:** Use `/join` to summon Sage to your voice channel.
+2.  **Chat:** Type your message in the text channel.
+3.  **Listen:** Sage will reply in text *and* speak the response aloud in the voice channel.
 
-1. [**Invite Sage**](https://discord.com/oauth2/authorize?client_id=1462117382398017667&scope=bot%20applications.commands&permissions=8)
-2. Type `/sage key login` to get your free API key.
-3. Type `/sage key set <key>` to start chatting!
+**Features:**
+*   **Dynamic Persona:** Sage adapts its voice and tone to match your conversation style (e.g., casual, formal, energetic).
+*   **Agentic Control:** You can ask Sage to "join voice" or "leave voice" using natural language.
+*   **Synced Playback:** Text and audio are synchronized for a seamless experience.
 
-[**Read the full Quick Start Guide**](docs/QUICKSTART.md)
+> **Note:** This feature requires a paid Pollinations API key (BYOP) because it uses the advanced `openai-audio` model. Set your key with `/sage key set`.
 
----
+## 🚀 Getting Started
 
-## 💬 Using Sage
+### 1. Invite Sage
+[**Click here to invite Sage to your server**](https://discord.com/api/oauth2/authorize?client_id=1211723232808570971&permissions=414464731200&scope=bot%20applications.commands)
 
-### How to Trigger
-
-Once activated, you can talk to Sage in 3 ways:
-
-- **Prefix**: Start a message with "**Sage**" (e.g., *Sage, summarize the code I just sent*)
-- **Mention**: Tag the bot anywhere (**@Sage**)
-- **Reply**: Just **reply** to any of Sage's previous messages.
-
-### Slash Commands
-
-| Command | Description | Admin Only |
-|:--------|:------------|:-----------|
-| `/ping` | Check if Sage is online | No |
-| `/sage whoiswho [user]` | View relationship info and tiers | No |
-| `/sage admin trace` | **New!** View decision reasoning behind any response | Yes |
-| `/sage key set` | Configure your Pollinations API Key (BYOP) | Yes |
+### 2. Basic Commands
+- `/sage whoiswho` — See relationship statuses
+- `/sage key set` — Set your own API key (for higher limits)
+- `/join` — Summon Sage to voice
+- `/leave` — Disconnect Sage from voice
 
 ---
 
-## ⚙️ Configuration (Recommended Default)
+## 🛠️ Configuration
 
 Sage is optimized for community interaction out of the box.
 
