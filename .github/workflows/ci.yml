@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-        - name: Use Node.js ${{ matrix.node-version }}
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
@@ -30,7 +30,7 @@ jobs:
       run: npx eslint src --config eslint.config.mjs
 
     - name: Build
-        run: npx tsc -p config/ci/tsconfig.json
+      run: npx tsc -p config/ci/tsconfig.json
 
     - name: Test
       run: npx vitest run -c config/ci/vitest.config.mjs
