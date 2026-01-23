@@ -71,4 +71,16 @@ describe('fetchAttachmentText', () => {
       expect(result.text).toBe('hello');
     }
   });
+
+  it('treats non-finite maxBytes as invalid and skips fetching', async () => {
+    const mockFetch = vi.fn();
+    vi.stubGlobal('fetch', mockFetch);
+
+    const result = await fetchAttachmentText('https://example.com/file.txt', 'file.txt', {
+      maxBytes: Number.NaN,
+    });
+
+    expect(result.kind).toBe('too_large');
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 });
