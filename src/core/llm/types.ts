@@ -18,7 +18,8 @@ export type LLMRole = 'system' | 'user' | 'assistant';
  */
 export type LLMContentPart =
   | { type: 'text'; text: string }
-  | { type: 'image_url'; image_url: { url: string } };
+  | { type: 'image_url'; image_url: { url: string } }
+  | { type: 'input_audio'; input_audio: { data: string; format: 'wav' | 'mp3' } };
 
 /**
  * Define the allowed content payload for LLM messages.
@@ -90,6 +91,12 @@ export interface LLMRequest {
  */
 export interface LLMResponse {
   content: string;
+  audio?: {
+    id: string;
+    data: string;
+    transcript: string;
+    expires_at: number;
+  };
   usage?: {
     promptTokens: number;
     completionTokens: number;

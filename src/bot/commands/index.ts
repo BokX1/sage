@@ -1,12 +1,14 @@
 import { REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { config } from '../../core/config/env';
 import { logger } from '../../utils/logger';
+import { voiceCommands } from './voice';
 
 const commandDefinitions = [
   new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'),
   new SlashCommandBuilder()
     .setName('llm_ping')
     .setDescription('Admin: Test LLM connectivity (Config Verification)'),
+  ...voiceCommands,
   new SlashCommandBuilder()
     .setName('sage')
     .setDescription('Sage bot commands')

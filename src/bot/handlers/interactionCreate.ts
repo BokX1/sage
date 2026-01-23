@@ -12,6 +12,7 @@ import {
   handleWhoiswho,
 } from './interactionHandlers';
 import { handleKeyCheck, handleKeyClear, handleKeyLogin, handleKeySet } from '../commands/key';
+import { handleJoinCommand, handleLeaveCommand } from '../commands/voice';
 
 
 const registrationKey = Symbol.for('sage.handlers.interactionCreate.registered');
@@ -29,6 +30,16 @@ export function registerInteractionCreateHandler() {
 
       if (interaction.commandName === 'ping') {
         await interaction.reply('Pong!');
+        return;
+      }
+
+      if (interaction.commandName === 'join') {
+        await handleJoinCommand(interaction);
+        return;
+      }
+
+      if (interaction.commandName === 'leave') {
+        await handleLeaveCommand(interaction);
         return;
       }
 
