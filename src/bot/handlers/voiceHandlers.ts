@@ -3,6 +3,7 @@ import { logger } from '../../utils/logger';
 import { getLLMClient } from '../../core/llm';
 import { Readable } from 'stream';
 import { config } from '../../core/config/env';
+import { getGuildApiKey } from '../../core/settings/guildSettingsRepo';
 
 export function registerVoiceEventHandlers() {
   const voiceManager = VoiceManager.getInstance();
@@ -10,11 +11,16 @@ export function registerVoiceEventHandlers() {
   voiceManager.on('audio_input', async ({ guildId, userId, audioBuffer }) => {
     logger.info({ guildId, userId, size: audioBuffer.length }, 'Received audio input');
 
-    if (!config.pollinationsApiKey) {
+    // 1. Resolve API Key (BYOP: Guild Key > Global Key)
+    const guildKey = await getGuildApiKey(guildId);
+    const effectiveKey = guildKey || config.pollinationsApiKey;
+
+    if (!effectiveKey) {
       logger.warn(
         { guildId, userId },
-        'Missing POLLINATIONS_API_KEY. Voice chat requires a paid plan or valid key for the openai-audio model.',
+        'Missing API Key (Global or Guild). Voice chat requires a paid plan or valid key for the openai-audio model. Use /sage key set to configure.',
       );
+      // Optional: Send a voice message explaining this? For now, silence/log is safer to avoid loops.
       return;
     }
 
@@ -25,14 +31,15 @@ export function registerVoiceEventHandlers() {
       const base64Audio = audioBuffer.toString('base64');
 
       // Send to LLM
-      logger.info({ guildId, userId }, 'Sending audio to LLM...');
+      logger.info({ guildId, userId, usingGuildKey: !!guildKey }, 'Sending audio to LLM...');
       const response = await llm.chat({
         model: 'openai-audio', // Enforce audio model
+        apiKey: effectiveKey,  // Pass the resolved key
         messages: [
           {
             role: 'user',
             content: [
-              { type: 'text', text: 'Please reply to this audio.' }, // Optional text prompt
+              { type: 'text', text: 'Please reply to this audio.' }, 
               {
                 type: 'input_audio',
                 input_audio: {
@@ -55,7 +62,6 @@ export function registerVoiceEventHandlers() {
         await voiceManager.playAudio(guildId, stream);
       } else if (response.content) {
         // Fallback: If no audio, maybe TTS? Or just log it.
-        // For now, if we don't get audio back, we just log the text.
         logger.info({ guildId, userId, text: response.content }, 'LLM replied with text only');
       }
 
