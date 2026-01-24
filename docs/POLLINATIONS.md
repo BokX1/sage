@@ -39,7 +39,7 @@ This document is written for:
 | **Image editing** | Reply to an image: “make it watercolor” → edited image | Same image endpoint + `image=<url>` parameter |
 | **Voice (TTS)** | Sage speaks in a voice channel (when enabled) | `chat/completions` with model `openai-audio` |
 
-Pollinations positions itself as a **unified API** for multiple modalities (text/images/audio, etc.). citeturn0search1
+Pollinations positions itself as a **unified API** for multiple modalities (text/images/audio, etc.).
 
 ---
 
@@ -153,7 +153,7 @@ When users attach an image, Sage can send multimodal content:
 ```
 
 > [!TIP]
-> If you’re self-hosting and debugging, test with the official API docs for the current request schema. citeturn0search0
+> If you’re self-hosting and debugging, test with the official API docs for the current request schema.
 
 ---
 
@@ -252,7 +252,7 @@ A common pattern for submissions is via the Pollinations GitHub repo as an **“
 - Category + language
 - Discord username/contact
 
-Example submission issue format: citeturn2view0
+Example submission issue format:
 
 ### What to highlight about Sage (reviewer-friendly)
 If you’re positioning Sage for feature consideration, the strongest “Pollinations-native” points are:
@@ -268,7 +268,7 @@ If you’re positioning Sage for feature consideration, the strongest “Pollina
 
 ### “Invalid API key” on set
 - Re-run `/sage key login` and ensure you copied the exact `sk_...` token from the redirected URL.
-- Confirm `auth.pollinations.ai` is not being used anywhere (deprecated). citeturn0search10
+- Confirm `auth.pollinations.ai` is not being used anywhere (deprecated).
 
 ### Public bot is slow or rate-limited
 - Configure a server key via BYOP.
