@@ -1,6 +1,6 @@
 {
     "config": {
-        "extends": "config/ci/.markdownlint.json"
+        "extends": ".markdownlint.json"
     },
     "globs": [
         "**/*.md",
