@@ -211,9 +211,6 @@ Operationally:
 - The bot joins a voice channel (`/join`)
 - Sage generates audio bytes via Pollinations and plays them in-channel
 
-> [!NOTE]
-> If you’re trying to showcase Sage as a Pollinations-powered app, voice is a good “wow” feature — but ensure BYOP is configured first.
-
 ---
 
 ## ✅ Verify Pollinations upstream (smoke tests)
