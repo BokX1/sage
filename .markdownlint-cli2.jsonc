@@ -1,0 +1,11 @@
+{
+    "config": {
+        "extends": "config/ci/.markdownlint.json"
+    },
+    "globs": [
+        "**/*.md",
+        "!node_modules/**",
+        "!CHANGELOG.md",
+        "!LICENSE"
+    ]
+}
