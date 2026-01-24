@@ -33,7 +33,7 @@ flowchart TD
     A[Discord message]:::discord --> B[ingestEvent]:::core --> C[generateChatReply]:::core
     C --> D{Voice fast-path?}:::router
 
-    D -- Yes --> E[Voice statistics]:::output --> K[Send response\n(text + optional attachments)]:::output
+    D -- Yes --> E[Voice statistics]:::output --> K["Send response\n(text + optional attachments)"]:::output
 
     D -- No --> R[LLM router]:::router
     R --> X[Expert pool\n(Memory / Social / Voice / Summary / Image)]:::expert --> H[Context builder]:::core --> I[LLM call]:::core --> J[Tool loop (qa/admin)]:::core --> K

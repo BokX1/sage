@@ -252,8 +252,7 @@ flowchart TD
     M --> CTX
     IG --> CTX
 
-    CTX --> BUDGET --> LLM[🤖 LLM]:::llm --> OUT[Reply
-(text + optional attachments)]:::user
+    CTX --> BUDGET --> LLM[🤖 LLM]:::llm --> OUT["Reply\n(text + optional attachments)"]:::user
 ```
 
 ### Why This Matters
