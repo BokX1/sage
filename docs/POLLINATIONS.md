@@ -9,7 +9,7 @@ This document is written for:
 - **Reviewers** (what Sage calls upstream, and how to verify it)
 
 > [!IMPORTANT]
-> Pollinations has gone through an auth migration: **token/key management moved to `enter.pollinations.ai`** and the old `auth.pollinations.ai` service is deprecated. citeturn0search10
+> Pollinations has gone through an auth migration: **token/key management moved to `enter.pollinations.ai`** and the old `auth.pollinations.ai` service is deprecated.
 
 ---
 
