@@ -36,7 +36,7 @@ flowchart TD
     D -- Yes --> E[Voice statistics]:::output --> K["Send response\n(text + optional attachments)"]:::output
 
     D -- No --> R[LLM router]:::router
-    R --> X[Expert pool\n(Memory / Social / Voice / Summary / Image)]:::expert --> H[Context builder]:::core --> I[LLM call]:::core --> J[Tool loop (qa/admin)]:::core --> K
+    R --> X["Expert pool\n(Memory / Social / Voice / Summary / Image)"]:::expert --> H[Context builder]:::core --> I[LLM call]:::core --> J["Tool loop (qa/admin)"]:::core --> K
 
     K --> L[Async: profile update]:::expert
     K --> M[Async: channel summary]:::expert
