@@ -67,17 +67,21 @@ export interface RunChatTurnResult {
     toolLoopResult?: ToolCallLoopResult;
     messages?: LLMChatMessage[];
   };
+  files?: Array<{
+    attachment: Buffer;
+    name: string;
+  }>;
 }
 
 // Helper to select voice based on text signals
 function selectVoicePersona(text: string, profile: string | null): string {
   const t = (text + (profile || '')).toLowerCase();
-  
+
   if (/(david attenborough|narrator|deep voice|male|boy|man|guy)/.test(t)) return 'onyx';
   if (/(girl|female|woman|crush|sister|mom|aunt|gf|girlfriend)/.test(t)) return 'nova';
   if (/(energetic|excited|sparkly|anime)/.test(t)) return 'shimmer';
   if (/(serious|news|anchor)/.test(t)) return 'echo';
-  
+
   return 'alloy'; // Default
 }
 
@@ -126,7 +130,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
     const recentMsgs = getRecentMessages({
       guildId,
       channelId,
-      limit: 7,
+      limit: 15,
     });
     conversationHistory = recentMsgs.map((m) => ({
       role: (m.authorId === 'bot' ? 'assistant' : 'user') as 'user' | 'assistant',
@@ -156,9 +160,25 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
       userId,
       traceId,
       skipMemory: !!userProfileSummary,
+      userText,
+      userContent,
+      replyReferenceContent,
+      conversationHistory,
+      apiKey,
     });
   } catch (err) {
     logger.warn({ error: err, traceId }, 'Failed to run experts (non-fatal)');
+  }
+
+  // Collect binary files from experts
+  const files: Array<{ attachment: Buffer; name: string }> = [];
+  for (const packet of expertPackets) {
+    if (packet.binary) {
+      files.push({
+        attachment: packet.binary.data,
+        name: packet.binary.filename,
+      });
+    }
   }
 
   const expertPacketsText = expertPackets.map((p) => `[${p.name}] ${p.content}`).join('\n\n');
@@ -255,7 +275,7 @@ export async function runChatTurn(params: RunChatTurnParams): Promise<RunChatTur
   // Voice Persona Logic
   let voice = 'alloy';
   let voiceInstruction = '';
-  
+
   if (isVoiceActive) {
     voice = selectVoicePersona(userText, userProfileSummary);
     voiceInstruction = `\n[VOICE MODE ACTIVE]
@@ -387,10 +407,28 @@ Your response will be spoken aloud by a TTS model (${voice} voice).
     };
   }
 
+  // Final Cleanup: If we attached files (e.g., images), aggressively strip any "Action" JSON that might have leaked.
+  // The LLM often thinks "I must confirm the action with JSON" even if we told it not to.
+  let cleanedText = finalText;
+  if (files.length > 0) {
+    // Regex matches Markdown code blocks containing JSON-like keys "action", "action_input"
+    // OR raw JSON blocks that look like action confirmations.
+    const jsonActionRegex = /```(?:json)?\s*\{(?:.|\n)*?"action"\s*:(?:.|\n)*?\}\s*```/yi;
+    const rawJsonRegex = /\{(?:.|\n)*?"action"\s*:(?:.|\n)*?\}/yi;
+
+    cleanedText = cleanedText.replace(jsonActionRegex, '').replace(rawJsonRegex, '').trim();
+
+    // Fallback: If the text is ONLY JSON, clear it entirely (let the image stand alone)
+    if (/^\s*\{(?:.|\n)*?\}\s*$/.test(cleanedText)) {
+      cleanedText = '';
+    }
+  }
+
   return {
-    replyText: finalText,
+    replyText: cleanedText,
     styleHint: styleMimicry,
     voice,
     debug: { messages, toolsExecuted },
+    files,
   };
 }

@@ -14,7 +14,8 @@ export type RouteKind =
     | 'admin'
     | 'voice_analytics'
     | 'social_graph'
-    | 'memory';
+    | 'memory'
+    | 'image_generate';
 
 export interface RouteDecision {
     kind: RouteKind;
@@ -34,36 +35,38 @@ export interface LLMRouterParams {
 
 const ROUTER_SYSTEM_PROMPT = `You are an intent classifier for a Discord bot called Sage.
 
-Your task: Analyze the user's message and conversation history to determine the correct route.
+primary_directive: "Analyze the user's LATEST message to determine the immediate intent. Use conversation history ONLY to resolve references (e.g., 'it', 'him', 'that') or for direct follow-up questions. If the user changes the topic, prioritize the new topic over historical context."
 
 ## Available Routes
 
-| Route | When to use | Experts | Temperature |
-|-------|-------------|---------|-------------|
-| summarize | User wants a recap, summary, TLDR, or "what happened" | Summarizer, Memory | 0.3 |
-| voice_analytics | User asks who is in voice, how long in voice, VC status | VoiceAnalytics, Memory | 0.5 |
-| social_graph | User asks about relationships, who knows whom, connections | SocialGraph, Memory | 0.5 |
-| memory | User asks "what do you know about me", their profile, preferences | Memory | 0.6 |
-| admin | User is configuring settings or this is a slash command | SocialGraph, VoiceAnalytics, Memory | 0.4 |
-| qa | Default for general chat, questions, requests | Memory | 0.8 |
+| Route | Keywords & Signals | Experts |
+|-------|-------------------|---------|
+| summarize | "summarize", "recap", "tl;dr", "what happened", "catch me up" | Summarizer, Memory |
+| image_generate | "draw", "generate", "paint", "create an image", "make a picture", "visualize", "turn this into art" | ImageGenerator |
+| voice_analytics | "who is in voice", "voice stats", "how long have they been", "vc status" | VoiceAnalytics, Memory |
+| social_graph | "who knows whom", "relationship", "friendship", "connection", "vibe check" | SocialGraph, Memory |
+| memory | "what do you know about me", "my profile", "forget me", "what do you remember" | Memory |
+| admin | Slash commands, "configure", "settings", "debug" | SocialGraph, VoiceAnalytics, Memory |
+| qa | General chat, coding questions, "how to", "why", greetings, banter, insults | Memory |
 
-## Critical Instructions
+## Decision Logic
 
-1. **Pronoun Resolution**: If the user says "them", "him", "those", "that", look at conversation history to understand what they're referring to.
-2. **Multi-expert Selection**: For complex queries, you can select multiple experts (e.g., Voice + Social for "who hangs out in voice with me")
-3. **Follow-up Detection**: If the user says "tell me more" or "what about", route based on the PREVIOUS topic, not the literal text.
+1. **Explicit Intent**: If the user explicitly asks for a function (e.g., "draw a cat"), map to that route immediately.
+2. **Multi-Expert**: If the request needs diverse data (e.g. "who is in voice and what are they talking about?"), select ALL relevant experts (VoiceAnalytics + Summarizer).
+3. **Context Resolution**: If the user says "make NOISE", check history. If previous msg was "voice channel", route to voice_analytics. If previous was "image", route to image_generate.
+4. **Fallback**: If the input is ambiguous, conversational, or a generic question, default to 'qa'.
 
 ## Output Format
 
-Respond with ONLY a JSON object:
+Return STRICT JSON:
 {
   "route": "<route_kind>",
-  "experts": ["<expert1>", "<expert2>"],
-  "reasoning": "<one sentence explaining why you chose this route>",
-  "temperature": <number>
+  "experts": ["<Expert1>", "<ExpertName2>"],
+  "reasoning": "User asked X, implying Y intent.",
+  "temperature": <0.0-1.0>
 }
 
-Valid experts: Summarizer, SocialGraph, Memory, VoiceAnalytics`;
+Valid Experts: Summarizer, SocialGraph, Memory, VoiceAnalytics, ImageGenerator`;
 
 const DEFAULT_QA_ROUTE: RouteDecision = {
     kind: 'qa',
@@ -138,13 +141,13 @@ export async function decideRoute(params: LLMRouterParams): Promise<RouteDecisio
         }
 
         // Validate route kind
-        const validRoutes: RouteKind[] = ['summarize', 'qa', 'admin', 'voice_analytics', 'social_graph', 'memory'];
+        const validRoutes: RouteKind[] = ['summarize', 'qa', 'admin', 'voice_analytics', 'social_graph', 'memory', 'image_generate'];
         const routeKind = validRoutes.includes(parsed.route as RouteKind)
             ? (parsed.route as RouteKind)
             : 'qa';
 
         // Validate experts
-        const validExperts: ExpertName[] = ['Summarizer', 'SocialGraph', 'Memory', 'VoiceAnalytics'];
+        const validExperts: ExpertName[] = ['Summarizer', 'SocialGraph', 'Memory', 'VoiceAnalytics', 'ImageGenerator'];
         const experts = (parsed.experts || ['Memory'])
             .filter((e): e is ExpertName => validExperts.includes(e as ExpertName));
 

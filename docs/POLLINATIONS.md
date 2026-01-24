@@ -50,7 +50,9 @@ Sage uses different models for specialized tasks:
 | **Profile Analysis** | `deepseek` | Building user memory profiles |
 | **Summaries** | `openai-large` | Channel conversation summaries |
 | **JSON Formatting** | `qwen-coder` | Structured data extraction |
+| **JSON Formatting** | `qwen-coder` | Structured data extraction |
 | **Voice** | `openai-audio` | Text-to-speech companion responses |
+| **Image Generation** | `klein-large` | Text-to-image with LLM-based prompt refinement |
 
 > [!NOTE]
 > You can override these defaults in `.env`. See [Configuration](CONFIGURATION.md) for the full list.
@@ -132,7 +134,16 @@ Or browse models at <https://pollinations.ai/>.
 
 - Analyze images shared in Discord
 - Discuss visual content
+- Analyze images shared in Discord
+- Discuss visual content
 - Multi-modal conversations
+
+### Image Generation
+
+- **Agentic Refiner**: Uses an LLM to rewrite and optimize your prompts before generation.
+- **Context-Aware**: Understands conversation history (last 10 messages) to interpret requests like "make it cyberpunk".
+- **Reply Support**: Explicitly handles "reply-to" context for image editing.
+- **Unified Endpoint**: Uses the fast `gen.pollinations.ai` API (requires API key for best performance).
 
 ### Voice synthesis (TTS)
 

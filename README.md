@@ -101,7 +101,7 @@ flowchart LR
 | Feature | Description |
 | :--- | :--- |
 | 🧠 **Agentic Memory** | Builds long-term preferences and throttles updates for efficiency |
-| 👁️ **Vision Support** | Analyzes and discusses images shared in chat |
+| 👁️ **Vision Support** | Analyzes images (Vision) and creates art (Agentic Generation) |
 | 📄 **File Analysis** | Share `.ts`, `.py`, `.txt` files for instant review or discussion |
 | 🎤 **Voice Companion (Beta)** | Text-to-speech companion with dynamic personas (BYOP required) |
 | 📊 **Voice Insights** | Tracks presence and duration, translating raw data into natural language |

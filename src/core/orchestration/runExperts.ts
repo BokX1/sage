@@ -4,6 +4,8 @@ import { runMemoryExpert } from './experts/memoryExpert';
 import { runSocialGraphExpert } from './experts/socialGraphExpert';
 import { runVoiceAnalyticsExpert } from './experts/voiceAnalyticsExpert';
 import { runSummarizerExpert } from './experts/summarizerExpert';
+import { runImageGenExpert } from './experts/imageGenExpert';
+import { LLMMessageContent, LLMChatMessage } from '../llm/types';
 
 export interface RunExpertsParams {
   experts: ExpertName[];
@@ -12,6 +14,11 @@ export interface RunExpertsParams {
   userId: string;
   traceId: string;
   skipMemory?: boolean;
+  userText?: string;
+  userContent?: LLMMessageContent;
+  replyReferenceContent?: LLMMessageContent | null;
+  conversationHistory?: LLMChatMessage[];
+  apiKey?: string;
 }
 
 /**
@@ -69,6 +76,24 @@ export async function runExperts(params: RunExpertsParams): Promise<ExpertPacket
             };
           } else {
             packet = await runSummarizerExpert({ guildId, channelId });
+          }
+          break;
+
+        case 'ImageGenerator':
+          if (!params.userText) {
+            packet = {
+              name: 'ImageGenerator',
+              content: 'ImageGenerator: Missing prompt text.',
+              tokenEstimate: 5,
+            };
+          } else {
+            packet = await runImageGenExpert({
+              userText: params.userText,
+              userContent: params.userContent,
+              replyReferenceContent: params.replyReferenceContent,
+              conversationHistory: params.conversationHistory,
+              apiKey: params.apiKey
+            });
           }
           break;
 

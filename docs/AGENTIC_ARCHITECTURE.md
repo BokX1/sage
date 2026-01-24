@@ -67,6 +67,9 @@ mindmap
     Multi-Modal
       Text Understanding
       Image Analysis
+      Text Understanding
+      Image Analysis
+      Image Generation
       File Processing
       Voice Companion (Beta)
 ```
@@ -237,6 +240,7 @@ flowchart TD
     R -->|Social / relationship| G[👥 Social Graph Expert]:::expert
     R -->|Voice analytics| V[🎤 Voice Analytics Expert]:::expert
     R -->|Memory / profile| P[🧠 Memory Expert]:::expert
+    R -->|Image gen| IG[🎨 Image Generator Expert]:::expert
     R -->|General chat| C[💬 Chat Engine]:::expert
 
     subgraph Context["Context Builder"]
@@ -249,6 +253,7 @@ flowchart TD
     G --> CTX
     V --> CTX
     P --> CTX
+    IG --> CTX
     C --> CTX
 
     CTX --> BUDGET --> LLM[🤖 LLM Brain]:::llm --> OUT[Reply to user]:::user

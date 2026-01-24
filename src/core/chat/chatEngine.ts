@@ -37,7 +37,12 @@ export async function generateChatReply(params: {
   mentionedUserIds?: string[];
   invokedBy?: 'mention' | 'reply' | 'wakeword' | 'autopilot' | 'command';
   isVoiceActive?: boolean;
-}): Promise<{ replyText: string; styleHint?: string; voice?: string }> {
+}): Promise<{
+  replyText: string;
+  styleHint?: string;
+  voice?: string;
+  files?: Array<{ attachment: Buffer; name: string }>;
+}> {
   // Enforce sequential processing per user
   const limit = limitByKey(params.userId, 1);
 
@@ -135,6 +140,11 @@ export async function generateChatReply(params: {
       }
     }
 
-    return { replyText, styleHint: result.styleHint, voice: result.voice };
+    return {
+      replyText,
+      styleHint: result.styleHint,
+      voice: result.voice,
+      files: result.files
+    };
   });
 }

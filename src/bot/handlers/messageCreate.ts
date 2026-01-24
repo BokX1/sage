@@ -268,11 +268,11 @@ export async function handleMessageCreate(message: Message) {
         try {
           const voiceManager = VoiceManager.getInstance();
           loggerWithTrace.info({ guildId: message.guildId, voice: result.voice }, 'Generating TTS (syncing)...');
-          
+
           // Await speech generation + start of playback BEFORE sending text
           // Pass the dynamically selected voice (e.g. 'onyx', 'nova') from the agent runtime
           await voiceManager.speak(message.guildId, result.replyText, result.styleHint);
-          
+
           loggerWithTrace.info('TTS started, sending text reply.');
         } catch (voiceErr) {
           loggerWithTrace.error({ voiceErr }, 'Voice TTS failed (sending text anyway)');
@@ -281,13 +281,14 @@ export async function handleMessageCreate(message: Message) {
       // -------------------------
 
       // Send messages to Discord
-      if (result.replyText) {
-        const chunks = smartSplit(result.replyText, 2000);
+      if (result.replyText || (result.files && result.files.length > 0)) {
+        const chunks = smartSplit(result.replyText || '', 2000);
         const [firstChunk, ...restChunks] = chunks;
-        if (firstChunk) {
+        if (firstChunk || (result.files && result.files.length > 0)) {
           await message.reply({
             content: firstChunk,
             allowedMentions: { repliedUser: false },
+            files: result.files,
           });
         }
         for (const chunk of restChunks) {
