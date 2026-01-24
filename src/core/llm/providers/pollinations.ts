@@ -245,6 +245,7 @@ export class PollinationsClient implements LLMClient {
         }
 
         const data = (await response.json()) as {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           choices?: { message?: { content?: string; audio?: any } }[];
           usage?: { prompt_tokens: number; completion_tokens: number; total_tokens: number };
         };

@@ -66,7 +66,7 @@ export async function handleVoiceStateUpdate(
 }
 
 export function registerVoiceStateUpdateHandler() {
-  const g = globalThis as any;
+  const g = globalThis as unknown as { [key: symbol]: boolean };
   if (g[registrationKey]) {
     return;
   }

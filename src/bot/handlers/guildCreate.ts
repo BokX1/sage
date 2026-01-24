@@ -31,7 +31,9 @@ export async function handleGuildCreate(guild: Guild) {
     }
 }
 
-export function registerGuildCreateHandler(client: any) {
+import { Client } from 'discord.js';
+
+export function registerGuildCreateHandler(client: Client) {
     client.on(Events.GuildCreate, handleGuildCreate);
     logger.info('GuildCreate handler registered');
 }

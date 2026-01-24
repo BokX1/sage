@@ -94,9 +94,9 @@ export async function runConfigDoctor() {
       ]);
       console.log('✅ LLM Ping: SUCCESS');
       console.log(`   Response: "${response.content.trim()}"`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ LLM Ping: FAILED');
-      console.error(`   Error: ${error.message}`);
+      console.error(`   Error: ${(error as Error).message}`);
     }
   }
 }

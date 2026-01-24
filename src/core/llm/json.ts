@@ -10,6 +10,7 @@ export async function callWithSchema<T>(
   systemInstructions?: string,
   apiKey?: string,
 ): Promise<T | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const jsonSchema = zodToJsonSchema(schema as any, 'output');
   const schemaStr = JSON.stringify(jsonSchema, null, 2);
 

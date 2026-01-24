@@ -47,4 +47,4 @@ export const logger = pino({
  * @param bindings - Key/value metadata to attach to log entries.
  * @returns Child logger instance.
  */
-export const childLogger = (bindings: Record<string, any>) => logger.child(bindings);
+export const childLogger = (bindings: Record<string, unknown>) => logger.child(bindings);

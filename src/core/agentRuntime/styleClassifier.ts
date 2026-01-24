@@ -94,7 +94,7 @@ export function analyzeUserStyle(history: string[]): string {
   let emojiCount = 0;
   let slangCount = 0;
   let shortCount = 0;
-  let questionCount = 0;
+  // let questionCount = 0;
   let punctuationCount = 0; // Proper punctuation usage
 
   const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u;
@@ -105,7 +105,7 @@ export function analyzeUserStyle(history: string[]): string {
     if (emojiRegex.test(msg)) emojiCount++;
     if (slangRegex.test(msg)) slangCount++;
     if (msg.split(/\s+/).length < 6) shortCount++;
-    if (msg.includes('?')) questionCount++;
+    // if (msg.includes('?')) questionCount++;
     if (/[.!?]$/.test(msg.trim())) punctuationCount++;
   }
 

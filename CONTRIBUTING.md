@@ -38,7 +38,7 @@ npm run db:migrate
 
 ## Code style
 
-- Follow the existing ESLint and Prettier configuration.
+- Follow the existing ESLint and Prettier configuration (located in `config/ci/`).
 - Favor small, well-named modules and pure functions for core logic.
 - Avoid introducing new prompt strings or altering existing prompt templates unless fixing a bug.
 

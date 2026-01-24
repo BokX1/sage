@@ -18,7 +18,7 @@ import { handleJoinCommand, handleLeaveCommand } from '../commands/voice';
 const registrationKey = Symbol.for('sage.handlers.interactionCreate.registered');
 
 export function registerInteractionCreateHandler() {
-  const g = globalThis as any;
+  const g = globalThis as unknown as { [key: symbol]: boolean };
   if (g[registrationKey]) {
     return;
   }
@@ -61,10 +61,10 @@ export function registerInteractionCreateHandler() {
             `**Latency**: ${duration}ms\n` +
             `**Provider**: ${config.llmProvider}`,
           );
-        } catch (e: any) {
+        } catch (e) {
           await interaction.editReply(
             `❌ **LLM Connection Failed**.\n` +
-            `**Error**: ${e.message}\n` +
+            `**Error**: ${(e as Error).message}\n` +
             `**Status**: Check server logs for details.`,
           );
         }

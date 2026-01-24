@@ -38,7 +38,7 @@ export async function handleKeyLogin(interaction: ChatInputCommandInteraction) {
     '4. Copy the text after "#api_key=" (the part starting with "sk_").',
     '5. Return to Discord and run: `/sage key set <your_key>`',
   ];
-  
+
   await interaction.reply({
     content: lines.join('\n'),
     ephemeral: true
@@ -48,10 +48,10 @@ export async function handleKeyLogin(interaction: ChatInputCommandInteraction) {
 export async function handleKeySet(interaction: ChatInputCommandInteraction) {
   const apiKey = interaction.options.getString('api_key', true);
   const guildId = interaction.guildId;
-  
+
   if (!apiKey.startsWith('sk_')) {
-     await interaction.reply({ content: '⚠️ Invalid key format. It should start with `sk_`.', ephemeral: true });
-     return;
+    await interaction.reply({ content: '⚠️ Invalid key format. It should start with `sk_`.', ephemeral: true });
+    return;
   }
 
   // Guild Scope Only
@@ -59,7 +59,7 @@ export async function handleKeySet(interaction: ChatInputCommandInteraction) {
     await interaction.reply({ content: '❌ Keys can only be set inside a server.', ephemeral: true });
     return;
   }
-  
+
   if (!isAdmin(interaction)) {
     await interaction.reply({ content: '❌ Only server admins can set the API key.', ephemeral: true });
     return;
@@ -89,23 +89,23 @@ Sage will now use this key for **all members** in this server.`);
 
 export async function handleKeyCheck(interaction: ChatInputCommandInteraction) {
   const guildId = interaction.guildId;
-  
+
   if (!guildId) {
     await interaction.reply({ content: '❌ Keys can only be checked inside a server.', ephemeral: true });
     return;
   }
 
   await interaction.deferReply({ ephemeral: true });
-  
+
   try {
     const apiKey = (await getGuildApiKey(guildId)) || null;
-    
+
     if (apiKey) {
       const masked = apiKey.length > 8 ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : 'sk_...';
-      
+
       // Live check
       const liveProfile = await fetchPollinationsProfile(apiKey);
-      
+
       if (liveProfile) {
         const balance = liveProfile.credits ?? 'Unknown';
         await interaction.editReply(
@@ -143,23 +143,23 @@ export async function handleKeyClear(interaction: ChatInputCommandInteraction) {
     await interaction.reply({ content: '❌ Keys can only be cleared inside a server.', ephemeral: true });
     return;
   }
-  
+
   if (!isAdmin(interaction)) {
     await interaction.reply({ content: '❌ Only server admins can clear the API key.', ephemeral: true });
     return;
   }
 
   await interaction.deferReply({ ephemeral: true });
-  
+
   try {
-     await upsertGuildApiKey(guildId, null);
-     await interaction.editReply('🗑️ **Server-wide API Key removed.** Sage will fall back to the bot\'s shared quota.');
+    await upsertGuildApiKey(guildId, null);
+    await interaction.editReply('🗑️ **Server-wide API Key removed.** Sage will fall back to the bot\'s shared quota.');
   } catch (error) {
-     if ((error as any)?.code === 'P2025') {
-        await interaction.editReply('ℹ️ You didn\'t have a key set.');
-     } else {
-        logger.error({ error, guildId }, 'Failed to clear API key');
-        await interaction.editReply('❌ Failed to clear key.');
-     }
+    if ((error as { code?: string })?.code === 'P2025') {
+      await interaction.editReply('ℹ️ You didn\'t have a key set.');
+    } else {
+      logger.error({ error, guildId }, 'Failed to clear API key');
+      await interaction.editReply('❌ Failed to clear key.');
+    }
   }
 }

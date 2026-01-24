@@ -86,7 +86,7 @@ export async function renderRelationshipHints(params: {
     }
 
     return result;
-  } catch (_error) {
+  } catch {
     return null;
   }
 }

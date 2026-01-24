@@ -7,7 +7,7 @@ import { config as appConfig } from '../../config';
 const HANDLED_KEY = Symbol.for('sage.handlers.ready');
 
 export function registerReadyHandler(client: Client) {
-  const g = globalThis as any;
+  const g = globalThis as unknown as { [key: symbol]: boolean };
   if (g[HANDLED_KEY]) return;
   g[HANDLED_KEY] = true;
 
@@ -40,7 +40,7 @@ export function registerReadyHandler(client: Client) {
 
       const channels = c.channels.cache.filter((ch) => ch.isTextBased() && !ch.isDMBased());
 
-      for (const [id, _] of channels) {
+      for (const [id] of channels) {
         // We fire and forget each channel to not block startup
         backfillChannelHistory(id, startupBacklogLimit).catch((err) => {
           logger.warn({ error: err, channelId: id }, 'Startup backfill failed for channel');

@@ -23,10 +23,10 @@ export function isAdmin(interaction: ChatInputCommandInteraction): boolean {
   // Only applicable in guilds
   if (interaction.inGuild() && member && 'permissions' in member) {
     // member.permissions can be a string (read-only) or Readonly<PermissionsBitField>
-    const perms = typeof member.permissions === 'string' 
-      ? new PermissionsBitField(BigInt(member.permissions)) 
+    const perms = typeof member.permissions === 'string'
+      ? new PermissionsBitField(BigInt(member.permissions))
       : member.permissions;
-      
+
     if (perms.has(PermissionsBitField.Flags.Administrator)) return true;
     if (perms.has(PermissionsBitField.Flags.ManageGuild)) return true;
   }
@@ -294,8 +294,8 @@ export async function handleAdminTrace(interaction: ChatInputCommandInteraction)
         return;
       }
 
-      const router = trace.routerJson as any;
-      const _experts = trace.expertsJson as any;
+      const router = trace.routerJson as { temperature?: number, experts?: string[] };
+      // const _experts = trace.expertsJson as any;
 
       const lines = [
         `**Trace: \`${trace.id}\`**`,
@@ -324,7 +324,7 @@ export async function handleAdminTrace(interaction: ChatInputCommandInteraction)
 
       const lines = [`**Recent Traces (last ${limit})**:`];
       for (const trace of traces) {
-        const _router = trace.routerJson as any;
+        // const _router = trace.routerJson as any;
         lines.push(
           `- \`${trace.id.slice(0, 8)}...\`: ${trace.routeKind} (${new Date(trace.createdAt).toLocaleString()})`,
         );

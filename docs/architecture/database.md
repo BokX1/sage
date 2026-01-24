@@ -25,8 +25,14 @@ erDiagram
         float weight
     }
 
+    ChannelMessage {
+        string messageId PK
+        string authorId
+        string content
+    }
+
     UserProfile ||--o{ VoiceSession : "Participates"
-    UserProfile ||--o{ Message : "Sends"
+    UserProfile ||--o{ ChannelMessage : "Sends (Logical)"
     
     GuildSettings ||--o{ UserProfile : "Scoped to"
     GuildSettings ||--o{ ChannelSummary : "Contains"
@@ -34,7 +40,11 @@ erDiagram
     RelationshipEdge }o--|| UserProfile : "Source"
     RelationshipEdge }o--|| UserProfile : "Target"
     
-    AgentTrace ||--o{ ToolCall : "Executes"
+    AgentTrace {
+        string id PK
+        json routerJson
+        json toolJson
+    }
 ```
 
 ## Core Tables

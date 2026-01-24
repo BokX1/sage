@@ -9,7 +9,7 @@ import {
   entersState,
   DiscordGatewayAdapterCreator,
 } from '@discordjs/voice';
-import { Client, VoiceChannel } from 'discord.js';
+import { VoiceChannel } from 'discord.js';
 import { Readable } from 'stream';
 import { logger } from '../utils/logger';
 import { EventEmitter } from 'events';
@@ -49,7 +49,7 @@ export class VoiceManager extends EventEmitter {
     try {
       logger.info({ guildId, textPreview: text.slice(0, 30), style: styleDescription }, 'Generating TTS...');
       const llm = getLLMClient();
-      
+
       let ttsPrompt = `Read this text naturally: "${text}"`;
       if (styleDescription) {
         ttsPrompt = `You are a lively voice assistant. Read this text with a ${styleDescription} tone: "${text}"`;
@@ -101,7 +101,7 @@ export class VoiceManager extends EventEmitter {
             entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
             entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
           ]);
-        } catch (error) {
+        } catch {
           logger.warn(
             { guildId: channel.guild.id, channelId: channel.id },
             'Voice connection disconnected',

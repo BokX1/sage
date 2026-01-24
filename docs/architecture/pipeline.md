@@ -34,7 +34,7 @@ Sage has moved from a regex-based router to a **High-Precision LLM Classifier** 
 
 - **Contextual Intelligence**: The router receives the **last 7 messages** of history, allowing it to resolve pronouns (e.g., "what about them?" or "tell me more about those sessions").
 - **Classification**: It outputs a structured JSON object containing the `kind` (route), `reasoningText` (why the route was chosen), and a list of `experts` to invoke.
-- **Fail-safe**: If the LLM router fails or provides invalid JSON, Sage defaults to the `qa` route with basic memory support.
+- **Fail-safe**: If the LLM router fails or provides invalid JSON, Sage defaults to a general conversation route (`chat`) with basic memory support.
 
 | Route | Primary Purpose | Default Experts |
 | --- | --- | --- |

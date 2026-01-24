@@ -22,6 +22,7 @@ export function limitConcurrency(concurrency: number) {
         }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const run = async (fn: () => Promise<any>, resolve: (value: any) => void, reject: (reason?: any) => void) => {
         activeCount++;
         try {
