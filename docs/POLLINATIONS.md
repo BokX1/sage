@@ -52,7 +52,7 @@ Sage uses these Pollinations hosts:
 - **Image bytes endpoint**: `https://gen.pollinations.ai/image/{prompt}`
 
 > [!NOTE]
-> You may still find older docs or examples using different hosts/subdomains. Sage’s current integration assumes the **enter + gen** split above, and the deprecated auth host should not be used. citeturn0search10turn0search7
+> You may still find older docs or examples using different hosts/subdomains. Sage’s current integration assumes the **enter + gen** split above, and the deprecated auth host should not be used.
 
 ---
 
@@ -243,7 +243,7 @@ curl -L "https://gen.pollinations.ai/image/a%20cat%20wearing%20sunglasses?model=
 ## 🧩 Applying to be featured on pollinations.ai/apps
 
 Pollinations showcases apps at:
-- `https://pollinations.ai/apps` citeturn0search6
+- `https://pollinations.ai/apps`
 
 A common pattern for submissions is via the Pollinations GitHub repo as an **“App Submission”** issue, including:
 - App name + description
@@ -286,11 +286,11 @@ If you’re positioning Sage for feature consideration, the strongest “Pollina
 
 ## 🔗 Resources
 
-- Pollinations homepage: <https://pollinations.ai> citeturn0search1
+- Pollinations homepage: <https://pollinations.ai>
 - Dashboard (keys, usage): <https://enter.pollinations.ai>
-- API reference: <https://enter.pollinations.ai/api/docs> citeturn0search0
-- Featured apps: <https://pollinations.ai/apps> citeturn0search6
-- Deprecated auth notice: <https://auth.pollinations.ai/> citeturn0search10
+- API reference: <https://enter.pollinations.ai/api/docs>
+- Featured apps: <https://pollinations.ai/apps>
+- Deprecated auth notice: <https://auth.pollinations.ai/>
 
 ---
 
