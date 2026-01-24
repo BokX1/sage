@@ -93,7 +93,7 @@ flowchart LR
 ## ✨ Features
 
 | Feature | Description |
-|:--------|:------------|
+| :--- | :--- |
 | 🧠 **Agentic Memory** | Builds long-term preferences and throttles updates for efficiency |
 | 👁️ **Vision Support** | Analyzes and discusses images shared in chat |
 | 📄 **File Analysis** | Share `.ts`, `.py`, `.txt` files for instant review or discussion |
@@ -169,7 +169,7 @@ See [Configuration Reference](docs/CONFIGURATION.md) for full details.
 ## 📚 Documentation
 
 | Document | Description |
-|:---------|:------------|
+| :--- | :--- |
 | [📚 Documentation Hub](docs/README.md) | **Start here** — Complete navigation index |
 | [⚡ Quick Start](docs/QUICKSTART.md) | 5-minute setup for new users |
 | [📖 Getting Started](docs/GETTING_STARTED.md) | Complete beginner walkthrough |
@@ -188,7 +188,7 @@ See [Configuration Reference](docs/CONFIGURATION.md) for full details.
 ## 💚 Why Choose Sage?
 
 | Feature | Traditional Bots | Sage |
-|:--------|:-----------------|:-----|
+| :--- | :--- | :--- |
 | **Memory** | Forgets after each message | Remembers and learns over time |
 | **Social Awareness** | Treats all users the same | Understands relationships and vibes |
 | **Context** | Limited to current message | Full conversation + user history |

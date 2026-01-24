@@ -48,7 +48,7 @@ npm run db:studio        # Open visual database browser
 Before starting Sage, verify:
 
 | Check | Command/Action | Expected Result |
-|:------|:---------------|:----------------|
+| :--- | :--- | :--- |
 | Docker running | Open Docker Desktop | Green “Running” status |
 | Database up | `docker compose -f config/ci/docker-compose.yml up -d db` | Container starts |
 | Config valid | `npm run doctor` | All checks pass |
@@ -61,7 +61,7 @@ Before starting Sage, verify:
 ### Minimum required
 
 | Variable | Description | How to Get |
-|:---------|:------------|:-----------|
+| :--- | :--- | :--- |
 | `DISCORD_TOKEN` | Bot authentication | Discord Developer Portal → Bot → Token |
 | `DISCORD_APP_ID` | Application identifier | Developer Portal → General Information |
 | `DATABASE_URL` | Database connection | Auto-configured with Docker |
@@ -69,7 +69,7 @@ Before starting Sage, verify:
 ### Recommended settings
 
 | Variable | Recommended Value | Why |
-|:---------|:------------------|:----|
+| :--- | :--- | :--- |
 | `LOGGING_ENABLED` | `true` | Enables memory features |
 | `TRACE_ENABLED` | `true` | Helps debug issues |
 | `AUTOPILOT_MODE` | `manual` | Predictable behavior |
@@ -78,7 +78,7 @@ Before starting Sage, verify:
 ### Optional enhancements
 
 | Variable | When to Use |
-|:---------|:------------|
+| :--- | :--- |
 | `POLLINATIONS_API_KEY` | Optional global key (or use `/sage key set` per server) |
 | `ADMIN_USER_IDS` | To enable admin commands |
 | `LOG_LEVEL=debug` | When troubleshooting |
@@ -124,7 +124,7 @@ npm run db:migrate                                       # Recreate tables
 ### In Discord
 
 | Command | What It Checks | Who Can Use |
-|:--------|:---------------|:------------|
+| :--- | :--- | :--- |
 | `/ping` | Bot is online and responsive | Everyone |
 | `/llm_ping` | AI connectivity and latency | Admins only |
 
@@ -161,7 +161,7 @@ LOG_LEVEL=error   # Errors only
 ### Key log messages
 
 | Message | Meaning |
-|:--------|:--------|
+| :--- | :--- |
 | `Logged in as Sage#1234` | Successfully connected to Discord |
 | `Ready!` | Bot is fully operational |
 | `Router decision` | How a message was classified |
@@ -171,7 +171,7 @@ LOG_LEVEL=error   # Errors only
 ### Common warning signs
 
 | Log Pattern | What It Means | Action |
-|:------------|:--------------|:-------|
+| :--- | :--- | :--- |
 | `Database connection failed` | Can’t reach PostgreSQL | Check Docker is running |
 | `Rate limited` | Too many AI requests | Wait or set a key |
 | `Formatter retry failed` | AI returned invalid JSON | Usually self-recovers |
@@ -267,7 +267,7 @@ npm start
 ### Recommended hosting
 
 | Provider | Notes |
-|:---------|:------|
+| :--- | :--- |
 | Railway | Easy deployment, free tier available |
 | Render | Simple setup, auto-deploys from GitHub |
 | DigitalOcean | Droplets for full control |

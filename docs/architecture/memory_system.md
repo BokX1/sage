@@ -22,7 +22,7 @@ This document describes how Sage stores, summarizes, and injects memory into LLM
 ## 1) Memory sources and storage
 
 | Memory type | Purpose | Storage | Key files |
-| --- | --- | --- | --- |
+| :--- | :--- | :--- | :--- |
 | **User profile** | Long-term personalization facts for a user. | `UserProfile` table. | `src/core/memory/profileUpdater.ts`, `src/core/memory/userProfileRepo.ts` |
 | **Channel summaries** | Rolling + long-term summaries for a channel. | `ChannelSummary` table. | `src/core/summary/*` |
 | **Raw transcript** | Recent messages for short-term context. | In-memory ring buffer; optional DB storage. | `src/core/awareness/*`, `src/core/ingest/ingestEvent.ts` |
@@ -101,7 +101,7 @@ When a message is processed, `buildContextMessages` assembles the prompt by prio
 Context is budgeted by `contextBudgeter` using the following defaults (configurable in `.env`):
 
 | Budget | Default | Env var |
-| --- | --- | --- |
+| :--- | :--- | :--- |
 | Max input tokens | 65,536 | `CONTEXT_MAX_INPUT_TOKENS` |
 | Reserved output tokens | 8,192 | `CONTEXT_RESERVED_OUTPUT_TOKENS` |
 | System prompt max | 6,000 | `SYSTEM_PROMPT_MAX_TOKENS` |
@@ -118,20 +118,24 @@ Context is budgeted by `contextBudgeter` using the following defaults (configura
 ## 5) Short-term memory: rolling channel summary
 
 **Files:**
+
 - `src/core/summary/channelSummaryScheduler.ts`
 - `src/core/summary/summarizeChannelWindow.ts`
 
 **Trigger:** The scheduler runs every `SUMMARY_SCHED_TICK_SEC` (default: 60s) and only processes channels with new messages.
 
 **Conditions:**
+
 - At least `SUMMARY_ROLLING_MIN_MESSAGES` new messages (default: 20)
 - At least `SUMMARY_ROLLING_MIN_INTERVAL_SEC` since last summary (default: 300s)
 
 **Window:**
+
 - Rolling window length: `SUMMARY_ROLLING_WINDOW_MIN` (default: 60 minutes)
 - Fetches up to 800 recent messages, bounded to 80,000 characters
 
 **Output:** a `StructuredSummary` JSON object containing:
+
 - `summaryText`, `topics`, `threads`, `decisions`, `actionItems`, `sentiment`, `unresolved`, `glossary`
 
 **Storage:** `ChannelSummary` with `kind = 'rolling'`.
@@ -169,6 +173,7 @@ The result is stored in `UserProfile.summary`. If the formatter fails, the previ
 ## 8) Relationship graph & social tiers
 
 **Files:**
+
 - `src/core/relationships/relationshipGraph.ts`
 - `src/core/orchestration/experts/socialGraphExpert.ts`
 

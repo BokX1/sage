@@ -60,7 +60,7 @@ flowchart LR
 
 Node.js runs Sage.
 
-1. Go to https://nodejs.org/
+1. Go to <https://nodejs.org/>
 2. Install the **LTS** version
 3. Restart your computer after installation
 
@@ -76,7 +76,7 @@ You should see something like `v20.11.0` (exact version may differ).
 
 Docker runs the database Sage uses to store memory.
 
-1. Go to https://www.docker.com/products/docker-desktop/
+1. Go to <https://www.docker.com/products/docker-desktop/>
 2. Install Docker Desktop for your OS
 3. Start Docker Desktop (it must be running)
 
@@ -86,7 +86,7 @@ Docker runs the database Sage uses to store memory.
 
 Git downloads Sage’s code.
 
-1. Go to https://git-scm.com/downloads
+1. Go to <https://git-scm.com/downloads>
 2. Install for your OS using defaults
 
 ---
@@ -95,7 +95,7 @@ Git downloads Sage’s code.
 
 ### 2.1 Create a Discord Application
 
-1. Open https://discord.com/developers/applications
+1. Open <https://discord.com/developers/applications>
 2. Click **New Application**
 3. Name it (e.g., “Sage”) and click **Create**
 
@@ -154,7 +154,7 @@ npm run onboard
 The wizard will ask for:
 
 | Prompt | What to Enter |
-|:-------|:--------------|
+| :--- | :--- |
 | **DISCORD_TOKEN** | Bot token from Step 2.3 |
 | **DISCORD_APP_ID** | Application ID from Step 2.2 |
 | **DATABASE_URL** | Type `2` to use the Docker default |
@@ -210,7 +210,7 @@ Keep this terminal window open.
 
 ### 6.1 Generate the Invite Link
 
-1. Open https://discord.com/developers/applications
+1. Open <https://discord.com/developers/applications>
 2. Select your application
 3. Go to **OAuth2** → **URL Generator**
 
@@ -224,7 +224,7 @@ Keep this terminal window open.
 **Bot Permissions:**
 
 | Permission | Integer | Purpose |
-|:-----------|:--------|:--------|
+| :--- | :--- | :--- |
 | Send Messages | 2048 | Reply to users |
 | Read Message History | 65536 | Read conversation context |
 | View Channels | 1024 | See channels |
@@ -308,7 +308,7 @@ Edit `.env` to customize:
 
 If you don’t want Docker, use any PostgreSQL database:
 
-1. Install PostgreSQL from https://www.postgresql.org/download/
+1. Install PostgreSQL from <https://www.postgresql.org/download/>
 2. Create a database called `sage`
 3. During `npm run onboard` (or `npm run setup`), choose option `1` for DATABASE_URL
 4. Enter your connection string:
@@ -324,9 +324,9 @@ npm start
 
 Hosting options mentioned in this repo:
 
-- https://railway.app
-- https://render.com
-- https://digitalocean.com
+- <https://railway.app>
+- <https://render.com>
+- <https://digitalocean.com>
 - Your own VPS
 
 ---
@@ -336,4 +336,4 @@ Hosting options mentioned in this repo:
 - [FAQ](FAQ.md)
 - [Troubleshooting](TROUBLESHOOTING.md)
 - `npm run doctor`
-- GitHub issues: https://github.com/BokX1/Sage/issues
+- GitHub issues: <https://github.com/BokX1/Sage/issues>

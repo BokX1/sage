@@ -30,7 +30,7 @@ This document explains what makes Sage different from traditional bots and how i
 An **agentic AI** is an AI system that can:
 
 | Capability | Traditional Bot | Agentic Bot (Sage) |
-|:-----------|:----------------|:-------------------|
+| :--- | :--- | :--- |
 | **Memory** | Forgets after each message | Remembers and learns over time |
 | **Autonomy** | Only responds to commands | Can observe, think, and act proactively |
 | **Context** | Limited to current message | Understands conversation history and relationships |
@@ -74,7 +74,7 @@ mindmap
 ### Scenario: A user frequently talks about TypeScript
 
 | Aspect | Traditional Bot | Sage |
-|:-------|:----------------|:-----|
+| :--- | :--- | :--- |
 | **Day 1** | "What is TypeScript?" → Generic explanation | Same → Generic explanation |
 | **Day 7** | Same question → Same generic answer | Notices pattern, asks: "Working on your TypeScript project again?" |
 | **Day 30** | No memory of past help | Remembers preferences, code style, common issues |
@@ -83,7 +83,7 @@ mindmap
 ### Scenario: User asks "Can you help with that thing?"
 
 | Traditional Bot | Sage |
-|:----------------|:-----|
+| :--- | :--- |
 | ❌ "I don't understand what 'that thing' means" | ✅ Checks recent context: "You mean the API rate limiting issue we discussed earlier?" |
 | ❌ "I cannot see images" | ✅ Analyzes shared images: "I see a React component in that screenshot—want me to debug it?" |
 
@@ -118,7 +118,7 @@ sequenceDiagram
 ### What Sage Remembers
 
 | Category | Examples |
-|:---------|:---------|
+| :--- | :--- |
 | **Preferences** | Favorite programming languages, preferred explanations style |
 | **Context** | Current projects, recent discussions, ongoing problems |
 | **Relationships** | Who talks to whom, interaction frequency, closeness |
@@ -127,7 +127,7 @@ sequenceDiagram
 ### What Sage Forgets
 
 | Category | Reason |
-|:---------|:-------|
+| :--- | :--- |
 | **Raw messages** | Summarized into profiles (privacy by design) |
 | **Sensitive data** | Never stored in profiles |
 | **Old context** | Replaced with consolidated summaries |
@@ -245,7 +245,7 @@ flowchart TD
 ### Why This Matters
 
 | Query | Traditional Bot | Sage |
-|:------|:----------------|:-----|
+| :--- | :--- | :--- |
 | "Who was in voice last night?" | ❌ "I can't access voice data" | ✅ Routes to Voice Expert → "Alice, Bob, and Charlie were in General for 2 hours" |
 | "Summarize what we talked about" | ❌ "What conversation?" | ✅ Routes to Summarizer → Provides channel summary |
 | "What did Sarah say about TypeScript?" | ❌ "I don't know Sarah" | ✅ Routes to Memory → Recalls Sarah's recent TypeScript discussions |

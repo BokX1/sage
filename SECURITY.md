@@ -3,9 +3,9 @@
 ## Supported Versions
 
 | Version | Supported |
-|:--------|:----------|
-| 1.0.x   | ✅ Active Support |
-| < 1.0   | ❌ No longer supported |
+| :--- | :--- |
+| 1.0.x | ✅ Active Support |
+| < 1.0 | ❌ No longer supported |
 
 ## Reporting a Vulnerability
 
@@ -27,7 +27,7 @@ We take security seriously. If you discover a security vulnerability in Sage, pl
 ### Response Timeline
 
 | Action | Timeline |
-|:-------|:---------|
+| :--- | :--- |
 | Initial acknowledgment | 48 hours |
 | Preliminary assessment | 7 days |
 | Fix development | 14-30 days (depending on severity) |

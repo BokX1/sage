@@ -22,7 +22,7 @@ A complete reference for Sage slash commands and interaction methods.
 ## ⚡ Quick Reference
 
 | Goal | Command / Action |
-|:-----|:-----------------|
+| :--- | :--- |
 | Check bot is alive | `/ping` |
 | See relationship tiers | `/sage whoiswho [user]` |
 | Get Pollinations key link | `/sage key login` |
@@ -51,7 +51,7 @@ A complete reference for Sage slash commands and interaction methods.
 Sage can be triggered in three ways:
 
 | Method | Example | Description |
-|:-------|:--------|:------------|
+| :--- | :--- | :--- |
 | **Wake Word** | `Sage, what is TypeScript?` | Start the message with “Sage” |
 | **Mention** | `@Sage explain this code` | Mention the bot anywhere |
 | **Reply** | *(Reply to Sage’s message)* | Continue an existing thread |
@@ -86,7 +86,7 @@ View relationship information and social tiers.
 ```
 
 | Parameter | Required | Description |
-|:----------|:---------|:------------|
+| :--- | :--- | :--- |
 | `user` | No | User to inspect (defaults to yourself) |
 
 **Shows:**
@@ -125,7 +125,7 @@ Set the server-wide Pollinations API key.
 ```
 
 | Parameter | Required | Description |
-|:----------|:---------|:------------|
+| :--- | :--- | :--- |
 | `api_key` | Yes | Your Pollinations API key (starts with `sk_`) |
 
 ---
@@ -188,7 +188,7 @@ Visualize the relationship graph.
 ```
 
 | Parameter | Required | Description |
-|:----------|:---------|:------------|
+| :--- | :--- | :--- |
 | `user` | No | Filter by specific user |
 
 **Shows:** ASCII/emoji visualization of relationship connections.
@@ -204,7 +204,7 @@ View recent agent processing traces for debugging.
 ```
 
 | Parameter | Required | Description |
-|:----------|:---------|:------------|
+| :--- | :--- | :--- |
 | `trace_id` | No | Specific trace ID to view |
 | `limit` | No | Number of traces (1-10, default: 3) |
 
@@ -229,7 +229,7 @@ Manually trigger a channel summary.
 ```
 
 | Parameter | Required | Description |
-|:----------|:---------|:------------|
+| :--- | :--- | :--- |
 | `channel` | No | Channel to summarize (defaults to current) |
 
 **Shows:** Generated summary of recent channel activity.
@@ -247,7 +247,7 @@ Manually set relationship level between two users.
 ```
 
 | Parameter | Required | Description |
-|:----------|:---------|:------------|
+| :--- | :--- | :--- |
 | `user_a` | Yes | First user |
 | `user_b` | Yes | Second user |
 | `level` | Yes | Relationship level (0.0 - 1.0) |
@@ -258,7 +258,7 @@ Manually set relationship level between two users.
 **Relationship Levels:**
 
 | Level | Tier |
-|:------|:-----|
+| :--- | :--- |
 | 0.9+ | 👑 Best Friend |
 | 0.7+ | 💚 Close Friend |
 | 0.5+ | 🤝 Friend |

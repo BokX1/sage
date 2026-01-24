@@ -31,6 +31,7 @@ This project follows **Semantic Versioning (SemVer)**: `MAJOR.MINOR.PATCH`.
 2. **Run validations**
    - `npm run lint`
    - `npm run build`
+   - Run `npm run doctor` to check compatibility.
    - `npm run test`
    - `npm pack`
 

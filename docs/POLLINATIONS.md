@@ -27,7 +27,7 @@ This page explains:
 ## ✅ Why Pollinations.ai?
 
 | Benefit | What It Means for You |
-|:--------|:----------------------|
+| :--- | :--- |
 | **Free API access** | No credit card required; free tier available |
 | **Multi-model support** | Choose from Gemini, DeepSeek, OpenAI, and more |
 | **OpenAI-compatible** | Easy integration and familiar request format |
@@ -41,7 +41,7 @@ This page explains:
 Sage uses different models for specialized tasks:
 
 | Task | Model | Purpose |
-|:-----|:------|:--------|
+| :--- | :--- | :--- |
 | **Chat** | `gemini` (configurable) | Main conversations with users |
 | **Profile Analysis** | `deepseek` | Building user memory profiles |
 | **Summaries** | `openai-large` | Channel conversation summaries |
@@ -104,28 +104,32 @@ npm run onboard
 # Type "list" when prompted for model selection
 ```
 
-Or browse models at https://pollinations.ai/.
+Or browse models at <https://pollinations.ai/>.
 
 ---
 
 ## 🌟 Features Sage Uses
 
 ### Text generation
+
 - Conversational responses
 - Memory-aware personalization
 - Context-rich dialogue
 
 ### Vision (image understanding)
+
 - Analyze images shared in Discord
 - Discuss visual content
 - Multi-modal conversations
 
 ### Voice synthesis (TTS)
+
 - Text-to-speech companion responses
 - Dynamic persona adaptation
 - Expressive audio output
 
 ### Structured output
+
 - JSON extraction for profiles
 - Summary generation
 - Data organization
@@ -135,11 +139,13 @@ Or browse models at https://pollinations.ai/.
 ## 📊 API Usage Tips
 
 ### Rate limits
+
 - Free tier has generous limits
 - Setting an API key unlocks higher quotas
 - Sage automatically handles rate limiting
 
 ### Optimization
+
 - Sage uses context budgeting to stay within limits
 - Specialized models for different tasks reduce costs
 - Caching reduces redundant calls
@@ -148,10 +154,10 @@ Or browse models at https://pollinations.ai/.
 
 ## 🔗 Resources
 
-- **Pollinations website:** https://pollinations.ai/
-- **API documentation:** https://enter.pollinations.ai/api/docs
-- **Featured apps:** https://pollinations.ai/apps
-- **GitHub:** https://github.com/pollinations
+- **Pollinations website:** <https://pollinations.ai/>
+- **API documentation:** <https://enter.pollinations.ai/api/docs>
+- **Featured apps:** <https://pollinations.ai/apps>
+- **GitHub:** <https://github.com/pollinations>
 
 ---
 

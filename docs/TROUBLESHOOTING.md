@@ -69,7 +69,7 @@ flowchart TD
 
 **Fix:**
 
-1. Get token from https://discord.com/developers/applications
+1. Get token from <https://discord.com/developers/applications>
 2. Add to `.env`: `DISCORD_TOKEN=your_token_here`
 3. Restart the bot
 
@@ -92,7 +92,7 @@ flowchart TD
 Check these in order:
 
 | Check | Command/Action | Expected |
-|:------|:---------------|:---------|
+| :--- | :--- | :--- |
 | Bot has permissions | Check channel permissions | Send Messages ✅ |
 | Wake word matches | `Sage, hello` | Response |
 | API key active | `/sage key check` | Key status shown |
@@ -224,7 +224,7 @@ RAW_MESSAGE_TTL_DAYS=1                     # Reduce from 3
 ### Slow responses
 
 | Factor | Optimization |
-|:-------|:-------------|
+| :--- | :--- |
 | Model | Use a faster model: `POLLINATIONS_MODEL=gemini` |
 | Context | Reduce `CONTEXT_MAX_INPUT_TOKENS` |
 | Network | Check Pollinations API status |
@@ -234,7 +234,7 @@ RAW_MESSAGE_TTL_DAYS=1                     # Reduce from 3
 ## 📋 Error Code Reference
 
 | Error | Meaning | Quick Fix |
-|:------|:--------|:----------|
+| :--- | :--- | :--- |
 | `P1001` | Database connection failed | Start PostgreSQL |
 | `P2002` | Unique constraint violation | Usually safe to ignore |
 | `P2025` | Record not found | Data was already deleted |
@@ -258,7 +258,7 @@ RAW_MESSAGE_TTL_DAYS=1                     # Reduce from 3
    /sage admin trace
    ```
 
-3. Open an issue: https://github.com/BokX1/Sage/issues
+3. Open an issue: <https://github.com/BokX1/Sage/issues>
 
 Include:
 

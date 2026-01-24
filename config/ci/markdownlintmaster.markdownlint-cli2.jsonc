@@ -11,7 +11,8 @@
         },
         "MD036": false,
         "MD060": false,
-        "MD034": false
+        "MD034": false,
+        "MD051": false
     },
     "globs": [
         "**/*.md",

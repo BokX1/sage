@@ -16,7 +16,7 @@ Sage documentation is organized to support two common goals:
 ### Getting Started
 
 | Document | Best For |
-|:---------|:---------|
+| :--- | :--- |
 | [⚡ Quick Start](QUICKSTART.md) | Run Sage in ~5 minutes |
 | [📖 Getting Started](GETTING_STARTED.md) | Set up Sage from source (step-by-step) |
 | [⚙️ Configuration](CONFIGURATION.md) | Tune behavior, memory, and limits |
@@ -24,7 +24,7 @@ Sage documentation is organized to support two common goals:
 ### Usage & Commands
 
 | Document | Best For |
-|:---------|:---------|
+| :--- | :--- |
 | [🎮 Commands Reference](COMMANDS.md) | Full slash command + interaction reference |
 | [❓ FAQ](FAQ.md) | Common questions |
 | [🔧 Troubleshooting](TROUBLESHOOTING.md) | Fixes for common failures and misconfig |
@@ -32,7 +32,7 @@ Sage documentation is organized to support two common goals:
 ### Architecture & Technical
 
 | Document | Best For |
-|:---------|:---------|
+| :--- | :--- |
 | [🤖 Agentic Architecture](AGENTIC_ARCHITECTURE.md) | What makes Sage “agentic” (high-level) |
 | [🧠 Memory System](architecture/memory_system.md) | How Sage stores/summarizes context |
 | [🔀 Runtime Pipeline](architecture/pipeline.md) | How messages route through experts and tools |
@@ -41,7 +41,7 @@ Sage documentation is organized to support two common goals:
 ### Operations & Security
 
 | Document | Best For |
-|:---------|:---------|
+| :--- | :--- |
 | [📋 Operations Runbook](operations/runbook.md) | Operating Sage in production |
 | [🔒 Security & Privacy](security_privacy.md) | What Sage stores and how to control it |
 | [🐝 Pollinations Integration](POLLINATIONS.md) | Provider + model configuration |
@@ -76,7 +76,7 @@ Sage documentation is organized to support two common goals:
 
 - Start with **[Troubleshooting](TROUBLESHOOTING.md)**
 - Then check **[FAQ](FAQ.md)**
-- If you’re still blocked, open an issue on GitHub: https://github.com/BokX1/Sage/issues
+- If you’re still blocked, open an issue on GitHub: <https://github.com/BokX1/Sage/issues>
 
 ---
 

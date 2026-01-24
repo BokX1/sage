@@ -150,7 +150,7 @@ Restart Sage after changing `.env`.
 Set `AUTOPILOT_MODE`:
 
 | Mode | Behavior | API Usage |
-|:-----|:---------|:----------|
+| :--- | :--- | :--- |
 | `manual` | Only responds on wake word/@mention/reply (default) | 🟢 Low |
 | `reserved` | Occasionally joins relevant conversations | 🟡 Medium |
 | `talkative` | Actively participates without prompts | 🔴 High |
@@ -224,7 +224,7 @@ Things to try:
 <summary><strong>What data does Sage store?</strong></summary>
 
 | Data Type | Description |
-|:----------|:------------|
+| :--- | :--- |
 | **User Profiles** | LLM-generated long-term summary of a user (throttled for efficiency). |
 | **Relationship Tiers** | Interaction-based tiers (e.g., “Best Friend”) with emojis. |
 | **Traces** | Router `reasoningText` and related metadata to explain why Sage responded the way it did. |

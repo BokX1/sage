@@ -35,7 +35,7 @@ A complete reference for Sage configuration. All settings are configured in your
 These settings are required for Sage to start.
 
 | Variable | Description | Example |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `DISCORD_TOKEN` | Bot token from the Discord Developer Portal | `MTIz...abc` |
 | `DISCORD_APP_ID` | Discord application ID | `1234567890123456789` |
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@localhost:5432/sage?schema=public` |
@@ -49,7 +49,7 @@ Sage uses specialized models for different tasks.
 ### Primary Configuration
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `LLM_PROVIDER` | AI provider | `pollinations` |
 | `POLLINATIONS_BASE_URL` | API endpoint | `https://gen.pollinations.ai/v1` |
 | `POLLINATIONS_MODEL` | Primary chat model (use a vision-capable model like `gemini` for image support) | `gemini` |
@@ -58,7 +58,7 @@ Sage uses specialized models for different tasks.
 ### Specialized System Models
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `PROFILE_PROVIDER` | Provider override for profile analysis | *(empty)* |
 | `PROFILE_POLLINATIONS_MODEL` | Model for user profile analysis | `deepseek` |
 | `SUMMARY_MODEL` | Model for channel summaries | `openai-large` |
@@ -68,7 +68,7 @@ Sage uses specialized models for different tasks.
 ### Model Limits
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `LLM_MODEL_LIMITS_JSON` | Custom token limits per model (JSON string) | *(empty)* |
 
 ---
@@ -78,7 +78,7 @@ Sage uses specialized models for different tasks.
 Control how Sage responds in chat.
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `WAKE_WORDS` | Words that trigger Sage at start of message | `sage` |
 | `WAKE_WORD_PREFIXES` | Optional prefixes (e.g., “hey sage”) | *(empty)* |
 | `AUTOPILOT_MODE` | Response mode: `manual`, `reserved`, or `talkative` | `manual` |
@@ -89,7 +89,7 @@ Control how Sage responds in chat.
 ### Autopilot Modes Explained
 
 | Mode | Behavior | API Usage |
-|:-----|:---------|:----------|
+| :--- | :--- | :--- |
 | `manual` | Responds only on wake word, @mention, or reply | 🟢 **Low** |
 | `reserved` | Occasionally joins relevant conversations | 🟡 **Medium** |
 | `talkative` | Actively participates without prompts | 🔴 **High** |
@@ -101,7 +101,7 @@ Control how Sage responds in chat.
 Control what Sage logs and stores.
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `LOGGING_ENABLED` | Enable message/voice ingestion | `true` |
 | `LOGGING_MODE` | `all` or `allowlist` | `all` |
 | `LOGGING_ALLOWLIST_CHANNEL_IDS` | Comma-separated channel IDs to log (if allowlist) | *(empty)* |
@@ -112,7 +112,7 @@ Control what Sage logs and stores.
 ### Retention Settings
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `RAW_MESSAGE_TTL_DAYS` | In-memory transcript retention (days) | `3` |
 | `RING_BUFFER_MAX_MESSAGES_PER_CHANNEL` | Max messages in memory per channel | `200` |
 | `CONTEXT_TRANSCRIPT_MAX_MESSAGES` | Max messages stored in DB per channel | `15` |
@@ -125,7 +125,7 @@ Control what Sage logs and stores.
 Configure automatic channel summarization.
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `SUMMARY_ROLLING_WINDOW_MIN` | Rolling window duration (minutes) | `60` |
 | `SUMMARY_ROLLING_MIN_MESSAGES` | Min messages before triggering summary | `20` |
 | `SUMMARY_ROLLING_MIN_INTERVAL_SEC` | Min seconds between summaries | `300` |
@@ -142,7 +142,7 @@ Control token allocation for LLM requests.
 ### Global Limits
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `CONTEXT_MAX_INPUT_TOKENS` | Total input token budget | `65536` |
 | `CONTEXT_RESERVED_OUTPUT_TOKENS` | Reserved tokens for output | `8192` |
 | `SYSTEM_PROMPT_MAX_TOKENS` | Max tokens for system prompt | `6000` |
@@ -151,7 +151,7 @@ Control token allocation for LLM requests.
 ### Block Budgets
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `CONTEXT_BLOCK_MAX_TOKENS_TRANSCRIPT` | Budget for raw transcript | `8000` |
 | `CONTEXT_BLOCK_MAX_TOKENS_ROLLING_SUMMARY` | Budget for rolling summary | `4800` |
 | `CONTEXT_BLOCK_MAX_TOKENS_PROFILE_SUMMARY` | Budget for profile summary | `4800` |
@@ -163,7 +163,7 @@ Control token allocation for LLM requests.
 ### Token Estimation
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `TOKEN_ESTIMATOR` | Token counting method | `heuristic` |
 | `TOKEN_HEURISTIC_CHARS_PER_TOKEN` | Characters per token estimate | `4` |
 | `CONTEXT_TRUNCATION_NOTICE` | Show truncation notice in context | `true` |
@@ -175,7 +175,7 @@ Control token allocation for LLM requests.
 Tune social relationship calculations.
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `RELATIONSHIP_HINTS_MAX_EDGES` | Max relationship edges to include | `10` |
 | `RELATIONSHIP_DECAY_LAMBDA` | Time decay factor | `0.06` |
 | `RELATIONSHIP_WEIGHT_K` | Weight scaling constant | `0.2` |
@@ -188,7 +188,7 @@ Tune social relationship calculations.
 Prevent spam and manage latency.
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `RATE_LIMIT_MAX` | Max responses per window | `5` |
 | `RATE_LIMIT_WINDOW_SEC` | Window duration (seconds) | `10` |
 | `TIMEOUT_CHAT_MS` | Timeout for chat requests | `300000` (5 min) |
@@ -199,7 +199,7 @@ Prevent spam and manage latency.
 ## 👑 Admin Access Control
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `ADMIN_ROLE_IDS` | Comma-separated role IDs with admin access | *(empty)* |
 | `ADMIN_USER_IDS` | Comma-separated user IDs with admin access | *(empty)* |
 
@@ -208,7 +208,7 @@ Prevent spam and manage latency.
 ## 🔍 Observability & Debugging
 
 | Variable | Description | Default |
-|:---------|:------------|:--------|
+| :--- | :--- | :--- |
 | `NODE_ENV` | `development`, `production`, `test` | `development` |
 | `LOG_LEVEL` | `debug`, `info`, `warn`, `error` | `info` |
 | `TRACE_ENABLED` | Store processing traces in database | `true` |
