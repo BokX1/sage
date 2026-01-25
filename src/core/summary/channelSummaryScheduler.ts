@@ -10,6 +10,8 @@ import {
   summarizeChannelWindow,
   StructuredSummary,
 } from './summarizeChannelWindow';
+import { getGuildApiKey } from '../settings/guildSettingsRepo';
+import { config } from '../config/env';
 
 export interface DirtyChannelParams {
   guildId: string | null;
@@ -130,10 +132,14 @@ export class ChannelSummaryScheduler {
       return;
     }
 
+    const guildApiKey = await getGuildApiKey(state.guildId);
+    const apiKey = guildApiKey ?? config.pollinationsApiKey;
+
     const rollingSummary = await this.summarizeWindow({
       messages,
       windowStart,
       windowEnd,
+      apiKey,
     });
 
     await this.summaryStore.upsertSummary({
@@ -152,7 +158,7 @@ export class ChannelSummaryScheduler {
       glossary: rollingSummary.glossary,
     });
 
-    await this.maybeUpdateProfileSummary(state, rollingSummary);
+    await this.maybeUpdateProfileSummary(state, rollingSummary, false, apiKey);
 
     this.dirtyChannels.delete(key);
   }

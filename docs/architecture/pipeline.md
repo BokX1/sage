@@ -43,7 +43,7 @@ flowchart TD
 ```
 
 > [!IMPORTANT]
-> On the public bot, **BYOP is required inside servers**. If a message originates from a guild and no server key is set, Sage returns the BYOP welcome message and does not call the LLM.
+> > **BYOP is the standard** for communities. If a message originates from a guild and no server key is set (and no global fallback key is configured in `.env`), Sage returns the BYOP welcome message and does not call the LLM.
 
 ---
 

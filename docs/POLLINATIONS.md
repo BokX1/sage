@@ -106,7 +106,7 @@ LLM_PROVIDER=pollinations
 POLLINATIONS_BASE_URL=https://gen.pollinations.ai/v1
 POLLINATIONS_MODEL=gemini
 
-# Optional global fallback key (server BYOP keys override this)
+# Optional: Global fallback key (used if no BYOP key is set for the server)
 POLLINATIONS_API_KEY=
 ```
 

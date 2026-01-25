@@ -19,7 +19,10 @@ This keeps Sage sustainable and enables higher limits for your server.
 
 ## 🔑 How It Works
 
-Sage needs an API key (“Pollen”) to generate responses. Sage uses a **server-wide key** so your community can chat without each member needing their own key.
+Sage needs an API key (“Pollen”) to generate responses. This can be provided in two ways:
+
+1. **Server-wide key (BYOP)**: **(Standard)** A server admin sets a specific key for their community using `/sage key set`.
+2. **Host-level key (`.env`)**: **(Optional)** The bot owner sets a default key for all servers.
 
 This key is used for:
 

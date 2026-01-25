@@ -30,6 +30,10 @@ export function createLLMClient(provider: LLMProviderName, opts?: LLMClientOptio
     default:
       // Fallback for any unknown provider
       logger.warn({ provider }, 'Unknown or unset LLM_PROVIDER, defaulting to Pollinations');
-      return new PollinationsClient();
+      return new PollinationsClient({
+        baseUrl: config.pollinationsBaseUrl,
+        apiKey: config.pollinationsApiKey,
+        model: opts?.pollinationsModel ?? config.pollinationsModel,
+      });
   }
 }

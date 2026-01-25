@@ -4,8 +4,9 @@ import { LLMChatMessage } from '../llm/types';
 import { logger } from '../utils/logger';
 
 // Router model: gemini-fast for low-cost, high-throughput classification
+// Router model: gemini-fast for low-cost, high-throughput classification
 const ROUTER_MODEL = 'gemini-fast';
-const ROUTER_TEMPERATURE = 0.1;
+const ROUTER_TEMPERATURE = 0.0;
 const ROUTER_TIMEOUT_MS = 45_000;
 
 export type RouteKind =
@@ -33,40 +34,52 @@ export interface LLMRouterParams {
     apiKey?: string;
 }
 
-const ROUTER_SYSTEM_PROMPT = `You are an intent classifier for a Discord bot called Sage.
+const ROUTER_SYSTEM_PROMPT = `You are the Intent Classifier for Sage, an advanced Discord AI.
+Your job is to route the user's request to the correct internal module based on their INTENT.
 
-primary_directive: "Analyze the user's LATEST message to determine the immediate intent. Use conversation history ONLY to resolve references (e.g., 'it', 'him', 'that') or for direct follow-up questions. If the user changes the topic, prioritize the new topic over historical context."
+### AVAILABLE ROUTES
 
-## Available Routes
+| Route | Function | Keywords & Triggers |
+|:---|:---|:---|
+| **image_generate** | Create or edit images. | "draw", "paint", "generate", "make it look like", "visualize", "turn this into" |
+| **voice_analytics** | Voice channel stats/status. | "who is in voice", "vc stats", "time in voice", "voice activity" |
+| **social_graph** | Relationship & vibe checks. | "who are my friends", "relationship tier", "who knows whom", "vibe check" |
+| **memory** | User profile/memory ops. | "what do you know about me", "forget me", "my profile", "memories" |
+| **summarize** | Recap conversations. | "summarize", "tl;dr", "recap", "catch me up", "what happened" |
+| **admin** | Bot configuration/debug. | "configure", "settings", "debug" |
+| **qa** | Conversational fallback. | EVERYTHING ELSE. Chat, coding, questions, banter. |
 
-| Route | Keywords & Signals | Experts |
-|-------|-------------------|---------|
-| summarize | "summarize", "recap", "tl;dr", "what happened", "catch me up" | Summarizer, Memory |
-| image_generate | "draw", "generate", "paint", "create an image", "make a picture", "visualize", "turn this into art" | ImageGenerator |
-| voice_analytics | "who is in voice", "voice stats", "how long have they been", "vc status" | VoiceAnalytics, Memory |
-| social_graph | "who knows whom", "relationship", "friendship", "connection", "vibe check" | SocialGraph, Memory |
-| memory | "what do you know about me", "my profile", "forget me", "what do you remember" | Memory |
-| admin | Slash commands, "configure", "settings", "debug" | SocialGraph, VoiceAnalytics, Memory |
-| qa | General chat, coding questions, "how to", "why", greetings, banter, insults | Memory |
+### REASONING LOGIC (CHAIN OF THOUGHT)
 
-## Decision Logic
+1. **Analyze Context**: Look at the "Conversation History".
+   - If the user says "make **it** pop" and the last bot message was an **image**, intent is \`image_generate\`.
+   - If the user says "who is **that**" and the last message was about a user, intent is \`qa\` or \`memory\`.
 
-1. **Explicit Intent**: If the user explicitly asks for a function (e.g., "draw a cat"), map to that route immediately.
-2. **Multi-Expert**: If the request needs diverse data (e.g. "who is in voice and what are they talking about?"), select ALL relevant experts (VoiceAnalytics + Summarizer).
-3. **Context Resolution**: If the user says "make NOISE", check history. If previous msg was "voice channel", route to voice_analytics. If previous was "image", route to image_generate.
-4. **Fallback**: If the input is ambiguous, conversational, or a generic question, default to 'qa'.
+2. **Check Explicit Intent**:
+   - "Draw a cat" -> \`image_generate\`
+   - "Summarize this" -> \`summarize\`
 
-## Output Format
+3. **Check Implicit Intent**:
+   - "Make me a pfp" -> \`image_generate\`
+   - "Review this code" -> \`qa\` (Programming/General)
 
-Return STRICT JSON:
+4. **Default Rule**:
+   - If the request is a general question, greeting, or specific codebase question, route to \`qa\`.
+   - **NEVER** invent new routes.
+
+### OUTPUT FORMAT
+
+Return a SINGLE valid JSON object. No markdown.
+
 {
-  "route": "<route_kind>",
-  "experts": ["<Expert1>", "<ExpertName2>"],
-  "reasoning": "User asked X, implying Y intent.",
-  "temperature": <0.0-1.0>
+  "reasoning": "Step-by-step logic explaining why this route was chosen.",
+  "route": "qa" | "image_generate" | "summarize" | ... ,
+  "experts": ["Memory", "Summarizer", ...],
+  "temperature": 0.0 - 1.0 (suggested temp for this task)
 }
 
-Valid Experts: Summarizer, SocialGraph, Memory, VoiceAnalytics, ImageGenerator`;
+**Valid Experts**: Summarizer, SocialGraph, Memory, VoiceAnalytics, ImageGenerator.
+**Note**: You essentially ALWAYS include "Memory" unless it's a pure deterministic command.`;
 
 const DEFAULT_QA_ROUTE: RouteDecision = {
     kind: 'qa',
